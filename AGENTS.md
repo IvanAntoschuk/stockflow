@@ -3,7 +3,7 @@
 Operational instructions for future coding sessions. Read this file first, then `README.md`.
 If these notes conflict with a direct user instruction, the user wins.
 
-Last updated: 2026-11-16 (end of Phase 1).
+Last updated: 2026-11-16 (end of Phase 2 implementation; verification and merge pending).
 
 ## 1. How to resume tomorrow
 
@@ -22,11 +22,16 @@ Last updated: 2026-11-16 (end of Phase 1).
    ```
    The database container is `stockflow-db` (PostgreSQL 16) on `localhost:5434`.
    If it is not running: `npm run db:up`.
-4. Start work on the correct branch (Phase 2):
+4. Resume the active phase branch. Phase 2 work lives on `feature/phase-2-catalog`:
+   ```powershell
+   git switch feature/phase-2-catalog
+   git pull --ff-only
+   ```
+   After Phase 2 is approved and merged, start Phase 3 from an updated `main`:
    ```powershell
    git switch main
    git pull --ff-only
-   git switch feature/phase-2-catalog
+   git switch feature/phase-3-inventory
    ```
 5. Check GitHub CLI auth before relying on PR commands:
    ```powershell
@@ -34,27 +39,28 @@ Last updated: 2026-11-16 (end of Phase 1).
    ```
    Last check: token for `vanya12312e` was invalid. SSH push works as `IvanAntoschuk`.
    If `gh` is still unauthenticated, ask the user to run `gh auth login -h github.com`.
-6. Briefly report the plan, implement, verify, commit, push, open a PR, and **pause for approval**
-   before merging. The user wants one phase at a time.
+6. Briefly report the plan, implement, commit, push, and open a PR. The user often runs verification
+   personally; do not block on long checks unless asked. **Pause for approval** before merging.
+   The user wants one phase at a time.
 
 ## 2. Status snapshot
 
 - Phase 1 (foundation + authentication) is **complete, verified, and pushed**.
-- `main` is at `5bcf08c` with four commits:
-  1. `4800fc4` chore: scaffold npm workspace, docker and tooling
-  2. `53e8c0f` feat(server): add prisma schema and jwt authentication
-  3. `674a82e` feat(client): add ant design shell and auth experience
-  4. `5bcf08c` docs: add setup guide and project architecture
+- Phase 2 (catalog schema, seed, CRUD APIs, and UI pages) is **implemented** on
+  `feature/phase-2-catalog`. User verification and the PR merge are pending.
+- `main` is at `d2f0d07` (`docs: add agent handoff notes`).
 - Remote: `git@github.com:IvanAntoschuk/stockflow.git` (SSH).
-- `main` and all four phase branches currently point to `5bcf08c`:
-  - `feature/phase-2-catalog`
+- `main` and the four phase branches started from `d2f0d07`. `feature/phase-2-catalog` carries the
+  Phase 2 commits:
+  - `feature/phase-2-catalog` (active)
   - `feature/phase-3-inventory`
   - `feature/phase-4-dashboard`
   - `feature/phase-5-polish`
-- Working tree was clean before this `AGENTS.md` was created. If it is still untracked, include it
-  in a deliberate docs commit when the user asks, not in an unrelated feature commit.
-- Database migration `20261116160905_init_auth` is applied.
-- Seed created one ADMIN user: `admin@stockflow.dev` / `Admin123!` (Olivia Bennett).
+- Database migrations: `20261116160905_init_auth` is applied; `20261116172753_add_catalog` is part
+  of the Phase 2 branch. Run `npm run db:migrate` after pulling Phase 2.
+- Seed upserts one ADMIN user (`admin@stockflow.dev` / `Admin123!`, Olivia Bennett), five
+  categories, five suppliers, two warehouses, twelve products, and inventory rows across both
+  warehouses with some intentionally low-stock items.
 - `.env` exists locally and is ignored; never commit it.
 - Docker container is healthy; local PostgreSQL 17 already uses 5432, so the project uses 5434.
 - `gh` token is invalid; SSH push works. Git identity: `Ivan Antoschuk <antoschukivan2010@gmail.com>`.
@@ -215,10 +221,27 @@ Frontend pattern to follow:
 - Before every commit: check `git diff --cached --name-only` for `.env`, `dist/`, `node_modules/`.
 - Phase cadence: implement, verify, report, pause. Do not start the next phase automatically.
 
-## 8. Phase 2 — catalog management (next work)
+## 8. Phase 2 — catalog management (implemented, verification pending)
 
 Goal: Product / Category / Supplier / Warehouse schema, CRUD APIs, seed data, and real UI pages
 replacing the corresponding `PlaceholderPage` routes.
+
+Status: implemented on `feature/phase-2-catalog` with migration `20261116172753_add_catalog`.
+The subsections below document the delivered behavior and serve as a review reference.
+
+Delivered layout: `server/src/modules/catalog/` (routes -> controller -> service -> schemas for all
+four resources, plus `catalog.utils.ts`), client pages in `client/src/pages/catalog/`, request
+modules in `client/src/api/`, types in `client/src/types/catalog.ts`, and validation in
+`client/src/lib/validation/catalog.ts`.
+
+Notable deviations from the original plan:
+
+- `Supplier.name` is not unique in the schema; the API searches by name and the seed upserts by it.
+- Warehouse delete is blocked whenever inventory rows exist, including zero-quantity rows.
+- Product delete archives when any inventory quantity is non-zero; otherwise it deletes the
+  zero-quantity inventory rows and the product in one transaction.
+- Product `stock` is computed by summing the included inventory rows instead of a separate
+  aggregate query.
 
 ### 8.1 Prisma models
 
@@ -351,7 +374,7 @@ Keep `/inventory`, `/movements`, and `/reports` as placeholders until later phas
 - Update the dashboard setup card after catalog data exists if it improves coherence, but do not
   build analytics yet.
 
-### 8.5 Suggested Phase 2 commits
+### 8.5 Phase 2 commits
 
 1. `feat(server): add catalog schema, seed and crud endpoints`
 2. `feat(client): add catalog management pages`
@@ -391,6 +414,11 @@ Browser checks:
 There is no Playwright dependency in the repo. Prior verification used an ad-hoc `playwright-core`
 install outside the repo. Do not add browser-test dependencies without user approval.
 
+The user may prefer to run verification personally. Never run long-lived commands (`npm run dev`,
+`tsx watch`, `prisma studio`) as part of verification, and prefer non-interactive variants
+(`prisma migrate deploy`, `vitest run`) with explicit timeouts. If a command needs input or exceeds
+the tool timeout, stop and report instead of retrying blindly.
+
 ## 10. Known issues and gotchas
 
 - **Root `package.json` is polluted.** It currently lists the entire dependency tree under
@@ -401,6 +429,8 @@ install outside the repo. Do not add browser-test dependencies without user appr
   build. Do this as `chore: clean root package manifest` only after user approval.
 - Prisma 6.19.3 prints a deprecation warning for `package.json#prisma` seed config. Leave it for
   now; do not bump Prisma major versions without a migration plan.
+- `prisma migrate dev` is interactive and can wait for input. Use `npm run db:migrate` normally;
+  use `npx prisma migrate deploy` for non-interactive runs. The same applies to seed confirmations.
 - `npm audit --omit=dev` was clean at Phase 1. The 3 high / 7 moderate findings are dev-only
   (`deepmerge-ts` via Prisma CLI, `minimatch` via typescript-eslint). Never run
   `npm audit fix --force`.

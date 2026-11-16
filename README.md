@@ -10,7 +10,8 @@ multiple warehouses, records every stock movement, and surfaces low-stock and va
 - **Backend:** Node.js, Express 5, TypeScript, Prisma, PostgreSQL, JWT, Zod
 - **Infrastructure:** Docker Compose (PostgreSQL)
 
-Project status: Phase 1 (foundation and authentication) complete. See the phase plan below.
+Project status: Phase 1 (foundation and authentication) and Phase 2 (catalog management) are
+implemented. Phase 2 is awaiting verification and merge. See the phase plan below.
 
 ## Getting started
 
@@ -56,7 +57,7 @@ rotate the JWT secret. Never commit real secrets.
 | `npm test` | Run server tests |
 | `npm run db:up` / `db:down` | Start/stop PostgreSQL |
 | `npm run db:migrate` | Apply Prisma migrations |
-| `npm run db:seed` | Seed demo data |
+| `npm run db:seed` | Seed demo data (admin, categories, suppliers, warehouses, products, stock) |
 | `npm run db:studio` | Open Prisma Studio |
 
 ## Architecture
@@ -70,10 +71,25 @@ Inventory balances live in the `Inventory` table, keyed by product and warehouse
 store a global stock quantity; balances are aggregated from warehouse inventory and every change
 is recorded as an immutable stock movement inside a database transaction.
 
+### Catalog API
+
+All catalog endpoints require a bearer token and return the shared API envelope:
+
+| Resource | Endpoints |
+| --- | --- |
+| Categories | `GET/POST /api/categories`, `GET/PATCH/DELETE /api/categories/:id` |
+| Suppliers | `GET/POST /api/suppliers`, `GET/PATCH/DELETE /api/suppliers/:id` |
+| Warehouses | `GET/POST /api/warehouses`, `GET/PATCH/DELETE /api/warehouses/:id` |
+| Products | `GET/POST /api/products`, `GET/PATCH/DELETE /api/products/:id` |
+
+List endpoints accept `page`, `pageSize`, and `search`. Products also accept `categoryId`,
+`supplierId`, and `includeArchived`. Duplicate unique values and guarded deletes return `409`.
+Deleting a product that still has stock archives it instead of removing it.
+
 ## Phase plan
 
-1. Foundation, database, authentication
-2. Products, categories, suppliers, warehouses
-3. Inventory operations and stock movement history
+1. Foundation, database, authentication — complete
+2. Products, categories, suppliers, warehouses — implemented, awaiting verification
+3. Inventory operations and stock movement history — next
 4. Dashboard, charts, reports
 5. UI polish, tests, documentation
