@@ -6,6 +6,10 @@ import { env } from './config/env.js';
 import { prisma } from './lib/prisma.js';
 import { errorHandler, notFoundHandler } from './middleware/error-handler.js';
 import { authRouter } from './modules/auth/auth.routes.js';
+import { categoriesRouter } from './modules/catalog/categories.routes.js';
+import { productsRouter } from './modules/catalog/products.routes.js';
+import { suppliersRouter } from './modules/catalog/suppliers.routes.js';
+import { warehousesRouter } from './modules/catalog/warehouses.routes.js';
 import { sendSuccess } from './utils/response.js';
 
 export function createApp() {
@@ -49,6 +53,10 @@ export function createApp() {
   });
 
   app.use('/api/auth', authLimiter, authRouter);
+  app.use('/api/categories', categoriesRouter);
+  app.use('/api/suppliers', suppliersRouter);
+  app.use('/api/warehouses', warehousesRouter);
+  app.use('/api/products', productsRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);
