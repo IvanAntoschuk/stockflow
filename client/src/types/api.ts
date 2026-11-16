@@ -11,6 +11,11 @@ export interface ApiSuccess<T> {
   meta?: PaginationMeta;
 }
 
+export interface Paginated<T> {
+  items: T[];
+  meta: PaginationMeta;
+}
+
 export interface ValidationIssue {
   field: string;
   message: string;

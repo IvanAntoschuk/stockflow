@@ -7,6 +7,10 @@ import { PlaceholderPage } from '@/pages/PlaceholderPage';
 import { SettingsPage } from '@/pages/SettingsPage';
 import { LoginPage } from '@/pages/auth/LoginPage';
 import { RegisterPage } from '@/pages/auth/RegisterPage';
+import { CategoriesPage } from '@/pages/catalog/CategoriesPage';
+import { ProductsPage } from '@/pages/catalog/ProductsPage';
+import { SuppliersPage } from '@/pages/catalog/SuppliersPage';
+import { WarehousesPage } from '@/pages/catalog/WarehousesPage';
 
 export const router = createBrowserRouter([
   {
@@ -35,24 +39,8 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <Navigate to="/dashboard" replace /> },
       { path: 'dashboard', element: <DashboardPage /> },
-      {
-        path: 'products',
-        element: (
-          <PlaceholderPage
-            title="Products"
-            description="Manage SKUs, pricing, categories and stock thresholds."
-          />
-        ),
-      },
-      {
-        path: 'categories',
-        element: (
-          <PlaceholderPage
-            title="Categories"
-            description="Organize the product catalog into reporting-friendly groups."
-          />
-        ),
-      },
+      { path: 'products', element: <ProductsPage /> },
+      { path: 'categories', element: <CategoriesPage /> },
       {
         path: 'inventory',
         element: (
@@ -62,24 +50,8 @@ export const router = createBrowserRouter([
           />
         ),
       },
-      {
-        path: 'warehouses',
-        element: (
-          <PlaceholderPage
-            title="Warehouses"
-            description="Manage physical locations and the stock held at each one."
-          />
-        ),
-      },
-      {
-        path: 'suppliers',
-        element: (
-          <PlaceholderPage
-            title="Suppliers"
-            description="Keep vendor contact details and product sourcing in one place."
-          />
-        ),
-      },
+      { path: 'warehouses', element: <WarehousesPage /> },
+      { path: 'suppliers', element: <SuppliersPage /> },
       {
         path: 'movements',
         element: (

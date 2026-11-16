@@ -1,5 +1,5 @@
 import axios, { AxiosError } from 'axios';
-import type { ApiErrorResponse, ValidationIssue } from '@/types/api';
+import type { ApiErrorResponse, ApiSuccess, Paginated, ValidationIssue } from '@/types/api';
 
 const TOKEN_KEY = 'stockflow.token';
 
@@ -58,6 +58,19 @@ function isValidationIssue(value: unknown): value is ValidationIssue {
     'message' in value &&
     typeof (value as ValidationIssue).message === 'string'
   );
+}
+
+export async function getPaginated<T>(url: string, params?: object): Promise<Paginated<T>> {
+  const { data } = await api.get<ApiSuccess<T[]>>(url, { params });
+  return {
+    items: data.data,
+    meta: data.meta ?? {
+      page: 1,
+      pageSize: data.data.length,
+      total: data.data.length,
+      totalPages: data.data.length > 0 ? 1 : 0,
+    },
+  };
 }
 
 export function getApiErrorMessage(error: unknown): string {
