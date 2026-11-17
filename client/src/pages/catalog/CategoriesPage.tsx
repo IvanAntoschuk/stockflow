@@ -17,12 +17,7 @@ import {
 } from 'antd';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import {
-  createCategory,
-  deleteCategory,
-  listCategories,
-  updateCategory,
-} from '@/api/categories';
+import { createCategory, deleteCategory, listCategories, updateCategory } from '@/api/categories';
 import { getApiErrorMessage } from '@/api/client';
 import { FormField } from '@/components/FormField';
 import { PageHeader } from '@/components/PageHeader';
@@ -199,7 +194,7 @@ export function CategoriesPage() {
       <PageHeader
         title="Categories"
         description="Group products into reporting-friendly categories."
-        breadcrumbs={[{ title: 'StockFlow' }, { title: 'Categories' }]}
+        breadcrumbs={[{ title: 'StockFlow', href: '/dashboard' }, { title: 'Categories' }]}
         actions={
           <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
             Add category

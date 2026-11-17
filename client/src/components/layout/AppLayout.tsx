@@ -24,7 +24,7 @@ import {
   Tooltip,
   type MenuProps,
 } from 'antd';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { BrandLogo } from '@/components/BrandLogo';
@@ -55,13 +55,18 @@ export function AppLayout() {
   const screens = Grid.useBreakpoint();
   const isDesktop = screens.lg !== false;
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [search, setSearch] = useState('');
+  const [searchState, setSearchState] = useState({ key: '', value: '' });
+  const search = searchState.key === location.key ? searchState.value : '';
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
 
   const selectedKey =
     navItems.find(
       (item) =>
         location.pathname === `/${item.key}` || location.pathname.startsWith(`/${item.key}/`),
-    )?.key ?? 'dashboard';
+    )?.key ?? null;
 
   const userMenuItems: MenuProps['items'] = [
     { key: 'settings', label: 'Account settings', icon: <SettingOutlined /> },
@@ -82,11 +87,15 @@ export function AppLayout() {
     }
   }
 
-  function submitSearch() {
-    const value = search.trim();
-    if (!value) return;
-    navigate(`/products?search=${encodeURIComponent(value)}`);
-    setSearch('');
+  function updateSearch(value: string) {
+    setSearchState({ key: location.key, value });
+  }
+
+  function submitSearch(value?: string) {
+    const query = (value ?? search).trim();
+    if (!query) return;
+    navigate(`/products?search=${encodeURIComponent(query)}`);
+    setSearchState({ key: '', value: '' });
   }
 
   const sidebar = (
@@ -95,16 +104,18 @@ export function AppLayout() {
         <BrandLogo />
       </div>
       <div className="px-3 pb-4">
-        <Menu
-          mode="inline"
-          selectedKeys={[selectedKey]}
-          items={navItems as MenuProps['items']}
-          onClick={({ key }) => {
-            setDrawerOpen(false);
-            navigate(`/${key}`);
-          }}
-          style={{ borderInlineEnd: 'none', background: 'transparent' }}
-        />
+        <nav aria-label="Main navigation">
+          <Menu
+            mode="inline"
+            selectedKeys={selectedKey ? [selectedKey] : []}
+            items={navItems as MenuProps['items']}
+            onClick={({ key }) => {
+              setDrawerOpen(false);
+              navigate(`/${key}`);
+            }}
+            style={{ borderInlineEnd: 'none', background: 'transparent' }}
+          />
+        </nav>
       </div>
       <div className="mt-auto px-4 pb-5">
         <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-3">
@@ -190,11 +201,11 @@ export function AppLayout() {
           ) : null}
 
           <div className="min-w-0 flex-1 sm:max-w-md">
-            <Input
+            <Input.Search
               allowClear
               value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              onPressEnter={submitSearch}
+              onChange={(event) => updateSearch(event.target.value)}
+              onSearch={submitSearch}
               prefix={<SearchOutlined className="text-slate-400" />}
               placeholder="Search products or SKU…"
               aria-label="Search products"
@@ -202,15 +213,17 @@ export function AppLayout() {
           </div>
 
           <div className="ml-auto flex items-center gap-1.5">
-            <Popover content={notifications} trigger="click" placement="bottomRight">
-              <Tooltip title="Notifications">
-                <Badge dot={false}>
-                  <Button type="text" icon={<BellOutlined />} aria-label="Notifications" />
-                </Badge>
-              </Tooltip>
-            </Popover>
+            <div className="hidden items-center gap-1.5 sm:flex">
+              <Popover content={notifications} trigger="click" placement="bottomRight">
+                <Tooltip title="Notifications">
+                  <Badge dot={false}>
+                    <Button type="text" icon={<BellOutlined />} aria-label="Notifications" />
+                  </Badge>
+                </Tooltip>
+              </Popover>
 
-            <Divider orientation="vertical" className="!mx-1 !h-6" />
+              <Divider orientation="vertical" className="!mx-1 !h-6" />
+            </div>
 
             <Dropdown
               menu={{ items: userMenuItems, onClick: handleUserMenu }}

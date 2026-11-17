@@ -173,9 +173,7 @@ export function WarehousesPage() {
       title: 'Address',
       dataIndex: 'address',
       key: 'address',
-      render: (address: string | null) => (
-        <span className="text-slate-500">{address || '—'}</span>
-      ),
+      render: (address: string | null) => <span className="text-slate-500">{address || '—'}</span>,
     },
     {
       title: 'Inventory records',
@@ -216,7 +214,7 @@ export function WarehousesPage() {
       <PageHeader
         title="Warehouses"
         description="Manage physical locations and the stock held at each one."
-        breadcrumbs={[{ title: 'StockFlow' }, { title: 'Warehouses' }]}
+        breadcrumbs={[{ title: 'StockFlow', href: '/dashboard' }, { title: 'Warehouses' }]}
         actions={
           <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
             Add warehouse

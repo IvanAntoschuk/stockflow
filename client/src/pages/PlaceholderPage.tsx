@@ -12,7 +12,7 @@ export function PlaceholderPage({ title, description }: PlaceholderPageProps) {
       <PageHeader
         title={title}
         description={description}
-        breadcrumbs={[{ title: 'StockFlow' }, { title }]}
+        breadcrumbs={[{ title: 'StockFlow', href: '/dashboard' }, { title }]}
       />
       <Card style={{ borderRadius: 14 }} styles={{ body: { padding: 48 } }}>
         <Empty

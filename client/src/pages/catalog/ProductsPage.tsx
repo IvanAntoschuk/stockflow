@@ -305,9 +305,7 @@ export function ProductsPage() {
       title: 'Supplier',
       key: 'supplier',
       width: 170,
-      render: (_, record) => (
-        <span className="text-slate-600">{record.supplier?.name ?? '—'}</span>
-      ),
+      render: (_, record) => <span className="text-slate-600">{record.supplier?.name ?? '—'}</span>,
     },
     {
       title: 'Unit',
@@ -424,7 +422,7 @@ export function ProductsPage() {
       <PageHeader
         title="Products"
         description="Manage SKUs, pricing, categories and stock thresholds."
-        breadcrumbs={[{ title: 'StockFlow' }, { title: 'Products' }]}
+        breadcrumbs={[{ title: 'StockFlow', href: '/dashboard' }, { title: 'Products' }]}
         actions={
           <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
             Add product
