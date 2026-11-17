@@ -246,9 +246,11 @@ async function seedAdmin() {
 
   console.log(`Seeded demo administrator: ${user.email}`);
   console.log(`Password: ${password} (change before deploying)`);
+
+  return user;
 }
 
-async function seedCatalog() {
+async function seedCatalog(adminId: string) {
   const categories = new Map<string, string>();
   for (const seed of categorySeeds) {
     const category = await prisma.category.upsert({
@@ -322,6 +324,35 @@ async function seedCatalog() {
         update: { quantity },
         create: { productId: product.id, warehouseId, quantity },
       });
+
+      if (quantity === 0) continue;
+
+      await prisma.stockMovement.upsert({
+        where: { id: `seed-opening-${seed.sku}-${warehouseCode}` },
+        update: {
+          productId: product.id,
+          warehouseId,
+          userId: adminId,
+          type: 'RECEIPT',
+          quantity,
+          previousQuantity: 0,
+          newQuantity: quantity,
+          reference: 'OPENING-BALANCE',
+          note: 'Opening balance loaded with demo data',
+        },
+        create: {
+          id: `seed-opening-${seed.sku}-${warehouseCode}`,
+          productId: product.id,
+          warehouseId,
+          userId: adminId,
+          type: 'RECEIPT',
+          quantity,
+          previousQuantity: 0,
+          newQuantity: quantity,
+          reference: 'OPENING-BALANCE',
+          note: 'Opening balance loaded with demo data',
+        },
+      });
     }
   }
 
@@ -332,8 +363,8 @@ async function seedCatalog() {
 }
 
 async function main() {
-  await seedAdmin();
-  await seedCatalog();
+  const admin = await seedAdmin();
+  await seedCatalog(admin.id);
 }
 
 main()

@@ -207,7 +207,9 @@ export async function deleteProduct(id: string) {
     throw AppError.notFound('Product not found');
   }
 
-  if (product.inventory.some((row) => row.quantity !== 0)) {
+  const movementCount = await prisma.stockMovement.count({ where: { productId: id } });
+
+  if (product.inventory.some((row) => row.quantity !== 0) || movementCount > 0) {
     const archived = await prisma.product.update({
       where: { id },
       data: { isArchived: true },

@@ -3,7 +3,7 @@
 Operational instructions for future coding sessions. Read this file first, then `README.md`.
 If these notes conflict with a direct user instruction, the user wins.
 
-Last updated: 2026-11-16 (end of Phase 2 implementation; verification and merge pending).
+Last updated: 2026-11-17 (end of Phase 3 implementation; API verification passed, browser verification and PR pending).
 
 ## 1. How to resume tomorrow
 
@@ -22,23 +22,24 @@ Last updated: 2026-11-16 (end of Phase 2 implementation; verification and merge 
    ```
    The database container is `stockflow-db` (PostgreSQL 16) on `localhost:5434`.
    If it is not running: `npm run db:up`.
-4. Resume the active phase branch. Phase 2 work lives on `feature/phase-2-catalog`:
+4. Resume the active phase branch. Phase 3 work lives on `feature/phase-3-inventory`:
    ```powershell
-   git switch feature/phase-2-catalog
+   git switch feature/phase-3-inventory
    git pull --ff-only
    ```
-   After Phase 2 is approved and merged, start Phase 3 from an updated `main`:
+   After Phase 3 is approved and merged, start Phase 4 from an updated `main`:
    ```powershell
    git switch main
    git pull --ff-only
-   git switch feature/phase-3-inventory
+   git switch feature/phase-4-dashboard
    ```
 5. Check GitHub CLI auth before relying on PR commands:
    ```powershell
    gh auth status
    ```
-   Last check: token for `vanya12312e` was invalid. SSH push works as `IvanAntoschuk`.
-   If `gh` is still unauthenticated, ask the user to run `gh auth login -h github.com`.
+   Last check: authenticated as `IvanAntoschuk` via keyring, and SSH push works. The old
+   `vanya12312e` token is still invalid. If `gh` is unauthenticated, ask the user to run
+   `gh auth login -h github.com`.
 6. Briefly report the plan, implement, commit, push, and open a PR. The user often runs verification
    personally; do not block on long checks unless asked. **Pause for approval** before merging.
    The user wants one phase at a time.
@@ -46,24 +47,29 @@ Last updated: 2026-11-16 (end of Phase 2 implementation; verification and merge 
 ## 2. Status snapshot
 
 - Phase 1 (foundation + authentication) is **complete, verified, and pushed**.
-- Phase 2 (catalog schema, seed, CRUD APIs, and UI pages) is **implemented** on
-  `feature/phase-2-catalog`. User verification and the PR merge are pending.
-- `main` is at `d2f0d07` (`docs: add agent handoff notes`).
-- Remote: `git@github.com:IvanAntoschuk/stockflow.git` (SSH).
-- `main` and the four phase branches started from `d2f0d07`. `feature/phase-2-catalog` carries the
-  Phase 2 commits:
-  - `feature/phase-2-catalog` (active)
-  - `feature/phase-3-inventory`
-  - `feature/phase-4-dashboard`
-  - `feature/phase-5-polish`
-- Database migrations: `20261116160905_init_auth` is applied; `20261116172753_add_catalog` is part
-  of the Phase 2 branch. Run `npm run db:migrate` after pulling Phase 2.
+- Phase 2 (catalog schema, seed, CRUD APIs, and UI pages) is **complete, verified, and merged** in
+  PR #1 as `d8b4291`; `feature/phase-2-catalog` was deleted locally and remotely.
+- Post-merge docs PR #2 (`docs/phase-2-complete`, `ca373bb`) is still open and unmerged. Phase 3
+  was branched from `d8b4291`, so it does not include that commit; this branch updates the same docs.
+- Phase 3 (inventory balances, stock movements, operations, and UI pages) is **implemented** on
+  `feature/phase-3-inventory`. Typecheck, lint, build, tests, and API smoke checks passed; browser
+  verification and the PR are pending.
+- `main` is at `d8b4291` (`Merge pull request #1 from IvanAntoschuk/feature/phase-2-catalog`).
+  Remote: `git@github.com:IvanAntoschuk/stockflow.git` (SSH).
+- Phase 3 commits on the active branch:
+  - `76f06f5` `feat(server): add stock movements and inventory operations api`
+  - `705aa93` `feat(client): add inventory and movement pages`
+  - docs commit pending in this session
+- Database migrations: `20261116160905_init_auth`, `20261116172753_add_catalog`, and
+  `20261117141416_add_stock_movements` are applied locally. The Phase 3 migration is part of this
+  branch; run `npm run db:migrate` after pulling it.
 - Seed upserts one ADMIN user (`admin@stockflow.dev` / `Admin123!`, Olivia Bennett), five
-  categories, five suppliers, two warehouses, twelve products, and inventory rows across both
-  warehouses with some intentionally low-stock items.
+  categories, five suppliers, two warehouses, twelve products, inventory rows across both
+  warehouses with some intentionally low-stock items, and idempotent opening-balance movements.
 - `.env` exists locally and is ignored; never commit it.
 - Docker container is healthy; local PostgreSQL 17 already uses 5432, so the project uses 5434.
-- `gh` token is invalid; SSH push works. Git identity: `Ivan Antoschuk <antoschukivan2010@gmail.com>`.
+- `gh` is authenticated as `IvanAntoschuk` via keyring, and SSH push works. Git identity:
+  `Ivan Antoschuk <antoschukivan2010@gmail.com>`.
 - No automated test files exist yet (`vitest run --passWithNoTests`).
 
 ## 3. Stack and environment
@@ -137,7 +143,7 @@ client/src/
   components/          Shared UI, layout, guards, PageHeader, FormField
   features/auth/       Auth slice and thunks
   lib/                 Labels and Zod validation schemas
-  pages/               Route pages (placeholders for Phase 2 modules)
+  pages/               Route pages (catalog and inventory modules; reports still placeholder)
   router.tsx           All routes
   theme.ts             Ant Design tokens
   index.css            Tailwind v4 layers; preflight intentionally omitted
@@ -148,13 +154,15 @@ server/src/
   lib/prisma.ts        Prisma singleton
   middleware/          Central error handler and 404
   modules/auth/        routes -> controller -> service, Zod schemas, JWT middleware
+  modules/catalog/     Category, supplier, warehouse and product CRUD
+  modules/inventory/   Inventory list, stock movement operations and history
   types/express.d.ts   `req.user` declaration merging
   utils/               AppError and response envelope
 
 server/prisma/
-  schema.prisma        Only Role + User today
+  schema.prisma        All Prisma models and enums
   migrations/          Applied migrations
-  seed.ts              Idempotent admin upsert
+  seed.ts              Idempotent admin, catalog and opening movements
 ```
 
 Backend pattern to follow:
@@ -175,6 +183,7 @@ Frontend pattern to follow:
 - Type API responses with `ApiSuccess<T>` / `ApiErrorResponse` from `client/src/types/api.ts`.
 - Use `getApiErrorMessage(error)` for user-facing errors.
 - Forms use React Hook Form + `zodResolver` + the `FormField` wrapper (existing auth pages).
+- Prefer `useWatch` over RHF `watch()`; `watch()` triggers a React Compiler lint warning.
 - Use `App.useApp()` for `message`/`modal`; avoid antd static methods.
 - Use `PageHeader` on every page. Use antd `Table`, `Drawer`/`Modal`, `Popconfirm`, `Descriptions`.
 - Alias `@/` maps to `client/src`.
@@ -211,23 +220,24 @@ Frontend pattern to follow:
 - Push the branch, open a PR to `main`, report the PR URL, and **wait for approval before merging**.
 - Preferred PR command after `gh auth login`:
   ```powershell
-  gh pr create --base main --head feature/phase-2-catalog `
-    --title "Phase 2: Catalog management" --body "<summary and verification>"
+  gh pr create --base main --head feature/phase-3-inventory `
+    --title "Phase 3: Inventory operations and movements" --body "<summary and verification>"
   ```
 - Fallback compare URL:
-  `https://github.com/IvanAntoschuk/stockflow/compare/main...feature/phase-2-catalog?expand=1`
+  `https://github.com/IvanAntoschuk/stockflow/compare/main...feature/phase-3-inventory?expand=1`
 - Never force-push. Never rewrite `main`. Never merge without user approval.
 - After an approved merge: switch to `main`, pull, and delete the merged local/remote branch.
 - Before every commit: check `git diff --cached --name-only` for `.env`, `dist/`, `node_modules/`.
 - Phase cadence: implement, verify, report, pause. Do not start the next phase automatically.
 
-## 8. Phase 2 — catalog management (implemented, verification pending)
+## 8. Phase 2 — catalog management (complete, merged)
 
 Goal: Product / Category / Supplier / Warehouse schema, CRUD APIs, seed data, and real UI pages
 replacing the corresponding `PlaceholderPage` routes.
 
-Status: implemented on `feature/phase-2-catalog` with migration `20261116172753_add_catalog`.
-The subsections below document the delivered behavior and serve as a review reference.
+Status: complete, verified, and merged in PR #1 as `d8b4291` with migration
+`20261116172753_add_catalog`. The subsections below document the delivered behavior and serve as a
+review reference.
 
 Delivered layout: `server/src/modules/catalog/` (routes -> controller -> service -> schemas for all
 four resources, plus `catalog.utils.ts`), client pages in `client/src/pages/catalog/`, request
@@ -280,16 +290,15 @@ Add and migrate (suggested migration name: `add_catalog`):
   - `@@unique([productId, warehouseId])`, index on `warehouseId`
 
 Do **not** add stock quantity to `Product`. Stock lives in `Inventory`.
-Phase 3 will add stock-movement history and operations.
+Phase 3 added stock-movement history and operations.
 
 Delete behavior:
 
 - Category/Supplier referenced by products: return `409` (do not cascade, do not orphan).
 - Warehouse with inventory rows: return `409`.
 - Product with inventory quantity or movement history: archive instead of delete.
-  In Phase 2 only `Inventory` exists; Phase 3 must extend the check to movements.
-  For zero-quantity inventory rows, remove them in the same transaction before hard delete,
-  or archive if that is safer. Document the chosen behavior.
+  Phase 3 extended the guard to `StockMovement`; zero-quantity inventory rows are deleted in the
+  same transaction when a product still has no movement history.
 
 ### 8.2 Seed
 
@@ -382,7 +391,73 @@ Keep `/inventory`, `/movements`, and `/reports` as placeholders until later phas
 
 Split further if a commit becomes hard to review. Push the branch and open the PR when done.
 
-## 9. Verification protocol (every phase)
+## 9. Phase 3 — inventory operations and movements (implemented, API verified)
+
+Goal: expose per-warehouse balances, signed stock operations, transfers, a permanent movement audit
+trail, and real UI pages replacing the `/inventory` and `/movements` placeholders.
+
+Status: implemented on `feature/phase-3-inventory` with migration
+`20261117141416_add_stock_movements`. Typecheck, lint, build, tests, and API smoke checks passed;
+browser verification and the PR are pending.
+
+Delivered layout: `server/src/modules/inventory/` (schemas, inventory service, movements service,
+controllers, routes), client requests in `client/src/api/inventory.ts` and
+`client/src/api/movements.ts`, types in `client/src/types/inventory.ts`, validation in
+`client/src/lib/validation/inventory.ts`, and pages in `client/src/pages/inventory/`.
+
+### 9.1 Prisma model
+
+- Added `enum StockMovementType { RECEIPT ISSUE ADJUSTMENT TRANSFER_IN TRANSFER_OUT }`.
+- Added `StockMovement` with `id`, `productId`, `warehouseId`, `userId`, `type`, signed `quantity`,
+  `previousQuantity`, `newQuantity`, optional `reference` and `note`, and `createdAt`.
+- Added `stockMovements` relations to `User`, `Warehouse`, and `Product`; indexes on
+  `productId`, `warehouseId`, `userId`, and `createdAt`.
+
+### 9.2 Movement rules
+
+- `StockMovement.quantity` is the signed delta: `RECEIPT`/`TRANSFER_IN` are positive;
+  `ISSUE`/`TRANSFER_OUT` are negative; `ADJUSTMENT` accepts any non-zero value.
+- Operations lock the product row with `SELECT ... FOR UPDATE`, upsert the inventory row, then
+  write the movement and balance change in one transaction.
+- Over-issuing returns `409 INSUFFICIENT_STOCK`; movements for archived products return
+  `409 PRODUCT_ARCHIVED`; same-warehouse transfers and zero adjustments return `422`.
+- Transfers create paired `TRANSFER_OUT`/`TRANSFER_IN` rows with a shared `reference`; generated
+  references use `TR-${randomUUID()}`.
+- The seed adds idempotent opening-balance `RECEIPT` rows keyed by product SKU and warehouse code
+  with `reference: 'OPENING-BALANCE'`.
+
+### 9.3 API
+
+All endpoints require `authenticate`.
+
+| Endpoint | Purpose |
+| --- | --- |
+| `GET /api/inventory` | Paginated balances with `search`, `productId`, `warehouseId`, `lowStock`, `includeArchived`; status `out`/`low`/`ok` |
+| `GET /api/movements` | Paginated history with `search`, `productId`, `warehouseId`, `type`, `from`, `to` |
+| `GET /api/movements/:id` | Single movement detail |
+| `POST /api/movements` | Receipt, issue or adjustment |
+| `POST /api/movements/transfer` | Atomic two-warehouse transfer |
+
+- Movement list requires `from <= to` when both dates are supplied.
+- Product delete archives when movement history exists, even if all balances are zero.
+- Warehouse delete remains guarded when inventory rows or movement rows exist.
+
+### 9.4 Client pages
+
+- `/inventory`: server-driven balance table, search/filters, low-stock filter, product and warehouse
+  options, receipt/issue/adjustment drawer, transfer drawer, and navigation to movement history.
+- `/movements`: server-driven history table, URL-synced search/filters/date range, pagination, and
+  detail drawer with before/after quantities.
+- Dashboard setup list now treats inventory operations as complete; reporting cards remain
+  placeholders for Phase 4.
+
+### 9.5 Phase 3 commits
+
+1. `feat(server): add stock movements and inventory operations api`
+2. `feat(client): add inventory and movement pages`
+3. `docs: update readme and handoff notes for phase 3`
+
+## 10. Verification protocol (every phase)
 
 Run and report:
 
@@ -402,6 +477,12 @@ API checks:
 - Guarded deletes return 409 when references exist.
 - Archived products disappear from the default list and reappear with `includeArchived=true`.
 - Product stock equals the sum of inventory quantities.
+- Stock operations update balances and write signed movement rows with correct before/after values.
+- Over-issue returns `409 INSUFFICIENT_STOCK`; zero adjustments and same-warehouse transfers return `422`.
+- Transfers create paired movements with one shared reference and update both balances.
+- A product with movement history archives on delete, even after balances reach zero.
+- Movements for archived products return `409 PRODUCT_ARCHIVED`.
+- Warehouses with inventory or movement rows cannot be deleted (`409`).
 
 Browser checks:
 
@@ -419,7 +500,7 @@ The user may prefer to run verification personally. Never run long-lived command
 (`prisma migrate deploy`, `vitest run`) with explicit timeouts. If a command needs input or exceeds
 the tool timeout, stop and report instead of retrying blindly.
 
-## 10. Known issues and gotchas
+## 11. Known issues and gotchas
 
 - **Root `package.json` is polluted.** It currently lists the entire dependency tree under
   `dependencies`, plus `main`, `keywords`, `author`, `license`, and `type: commonjs`. Those belong
@@ -441,7 +522,7 @@ the tool timeout, stop and report instead of retrying blindly.
 - Git may warn about LF/CRLF; `.gitattributes` normalizes text to LF.
 - Commit attribution depends on `antoschukivan2010@gmail.com` being verified on the GitHub account.
 
-## 11. Definition of done for a phase
+## 12. Definition of done for a phase
 
 - Feature works end to end against PostgreSQL.
 - Typecheck, lint, build, and available tests pass.

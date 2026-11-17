@@ -156,11 +156,14 @@ export async function deleteWarehouse(id: string) {
     throw AppError.notFound('Warehouse not found');
   }
 
-  const inventoryCount = await prisma.inventory.count({ where: { warehouseId: id } });
-  if (inventoryCount > 0) {
+  const [inventoryCount, movementCount] = await Promise.all([
+    prisma.inventory.count({ where: { warehouseId: id } }),
+    prisma.stockMovement.count({ where: { warehouseId: id } }),
+  ]);
+  if (inventoryCount > 0 || movementCount > 0) {
     throw AppError.conflict(
       'WAREHOUSE_IN_USE',
-      'This warehouse still has inventory records and cannot be deleted',
+      'This warehouse still has inventory records or stock movements and cannot be deleted',
     );
   }
 

@@ -11,6 +11,8 @@ import { CategoriesPage } from '@/pages/catalog/CategoriesPage';
 import { ProductsPage } from '@/pages/catalog/ProductsPage';
 import { SuppliersPage } from '@/pages/catalog/SuppliersPage';
 import { WarehousesPage } from '@/pages/catalog/WarehousesPage';
+import { InventoryPage } from '@/pages/inventory/InventoryPage';
+import { MovementsPage } from '@/pages/inventory/MovementsPage';
 
 export const router = createBrowserRouter([
   {
@@ -41,26 +43,10 @@ export const router = createBrowserRouter([
       { path: 'dashboard', element: <DashboardPage /> },
       { path: 'products', element: <ProductsPage /> },
       { path: 'categories', element: <CategoriesPage /> },
-      {
-        path: 'inventory',
-        element: (
-          <PlaceholderPage
-            title="Inventory"
-            description="Review balances and perform stock-in, stock-out, adjustments and transfers."
-          />
-        ),
-      },
+      { path: 'inventory', element: <InventoryPage /> },
       { path: 'warehouses', element: <WarehousesPage /> },
       { path: 'suppliers', element: <SuppliersPage /> },
-      {
-        path: 'movements',
-        element: (
-          <PlaceholderPage
-            title="Movements"
-            description="Inspect the permanent audit trail of every inventory change."
-          />
-        ),
-      },
+      { path: 'movements', element: <MovementsPage /> },
       {
         path: 'reports',
         element: (
