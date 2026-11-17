@@ -27,19 +27,19 @@ const steps: SetupStep[] = [
   {
     title: 'Build your product catalog',
     description: 'Create categories, suppliers and products with unique SKUs and pricing.',
-    state: 'next',
+    state: 'complete',
     action: { label: 'Open products', path: '/products' },
   },
   {
     title: 'Configure warehouse locations',
     description: 'Set up each location that will hold its own inventory balances.',
-    state: 'upcoming',
+    state: 'complete',
     action: { label: 'Open warehouses', path: '/warehouses' },
   },
   {
     title: 'Record stock movements',
     description: 'Receive, issue, adjust and transfer stock with a complete audit trail.',
-    state: 'upcoming',
+    state: 'next',
     action: { label: 'Open inventory', path: '/inventory' },
   },
 ];
@@ -83,8 +83,8 @@ export function DashboardPage() {
           styles={{ body: { padding: 24 } }}
         >
           <p className="mb-5 text-sm leading-6 text-slate-600">
-            Your authentication layer is live. Complete the remaining steps to unlock inventory
-            analytics, warehouse balances and movement history.
+            Your authentication and catalog layers are live. Record stock movements next to unlock
+            warehouse balances, low-stock alerts and inventory analytics.
           </p>
 
           <div className="space-y-3">
@@ -172,7 +172,7 @@ export function DashboardPage() {
           >
             <p className="text-[13px] leading-6 text-slate-500">
               Live product counts, low-stock alerts, inventory valuation and movement trends will
-              appear here once products and warehouse stock are added.
+              appear here once inventory operations are recorded.
             </p>
             <ul className="mt-4 space-y-2.5 text-[13px] text-slate-600">
               <li className="flex items-center justify-between gap-3">
@@ -181,7 +181,7 @@ export function DashboardPage() {
               </li>
               <li className="flex items-center justify-between gap-3">
                 <span>Low-stock alerts</span>
-                <Tag className="!mr-0">Awaiting catalog</Tag>
+                <Tag className="!mr-0">Awaiting movements</Tag>
               </li>
               <li className="flex items-center justify-between gap-3">
                 <span>Movement activity</span>
