@@ -11,7 +11,8 @@ multiple warehouses, records every stock movement, and surfaces low-stock and va
 - **Infrastructure:** Docker Compose (PostgreSQL)
 
 Project status: Phase 1 (foundation and authentication) and Phase 2 (catalog management) are
-implemented. Phase 2 is awaiting verification and merge. See the phase plan below.
+complete. Phase 3 (inventory operations and stock movement history) is implemented and API-verified;
+browser verification and its PR are pending. See the phase plan below.
 
 ## Getting started
 
@@ -57,7 +58,7 @@ rotate the JWT secret. Never commit real secrets.
 | `npm test` | Run server tests |
 | `npm run db:up` / `db:down` | Start/stop PostgreSQL |
 | `npm run db:migrate` | Apply Prisma migrations |
-| `npm run db:seed` | Seed demo data (admin, categories, suppliers, warehouses, products, stock) |
+| `npm run db:seed` | Seed demo data (admin, catalog, balances, opening stock movements) |
 | `npm run db:studio` | Open Prisma Studio |
 
 ## Architecture
@@ -69,7 +70,8 @@ server/   Express REST API (routes -> controllers -> services -> Prisma)
 
 Inventory balances live in the `Inventory` table, keyed by product and warehouse. Products never
 store a global stock quantity; balances are aggregated from warehouse inventory and every change
-is recorded as an immutable stock movement inside a database transaction.
+is recorded as an immutable, signed `StockMovement` inside a database transaction. Receipts,
+issues, adjustments and transfers all update balances and write audit rows together.
 
 ### Catalog API
 
@@ -84,12 +86,27 @@ All catalog endpoints require a bearer token and return the shared API envelope:
 
 List endpoints accept `page`, `pageSize`, and `search`. Products also accept `categoryId`,
 `supplierId`, and `includeArchived`. Duplicate unique values and guarded deletes return `409`.
-Deleting a product that still has stock archives it instead of removing it.
+Deleting a product that still has stock or movement history archives it instead of removing it.
+
+### Inventory API
+
+All inventory endpoints also require a bearer token.
+
+| Resource | Endpoints |
+| --- | --- |
+| Balances | `GET /api/inventory` |
+| Movements | `GET/POST /api/movements`, `GET /api/movements/:id`, `POST /api/movements/transfer` |
+
+Balance queries accept `search`, `productId`, `warehouseId`, `lowStock`, and `includeArchived`; rows
+include an `out`/`low`/`ok` status. Movement queries accept `search`, `productId`, `warehouseId`,
+`type`, `from`, and `to`. Receipts, issues and adjustments write signed movement deltas; transfers
+write paired `TRANSFER_OUT`/`TRANSFER_IN` rows with a shared reference. Over-issue returns `409`,
+while zero adjustments and same-warehouse transfers return `422`.
 
 ## Phase plan
 
 1. Foundation, database, authentication — complete
-2. Products, categories, suppliers, warehouses — implemented, awaiting verification
-3. Inventory operations and stock movement history — next
-4. Dashboard, charts, reports
+2. Products, categories, suppliers, warehouses — complete
+3. Inventory operations and stock movement history — implemented, API-verified
+4. Dashboard, charts, reports — next
 5. UI polish, tests, documentation
