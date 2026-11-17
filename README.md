@@ -10,9 +10,9 @@ multiple warehouses, records every stock movement, and surfaces low-stock and va
 - **Backend:** Node.js, Express 5, TypeScript, Prisma, PostgreSQL, JWT, Zod
 - **Infrastructure:** Docker Compose (PostgreSQL)
 
-Project status: Phases 1–3 (authentication, catalog management, and inventory operations) are
-complete. Phase 4 (dashboard charts, reporting APIs, and reports page) is implemented and
-API-verified; browser verification and its PR are pending. See the phase plan below.
+Project status: Phases 1–4 (authentication, catalog, inventory, and reporting) are complete.
+Phase 5 (UI polish, automated tests, and documentation) is implemented and verified; browser
+verification and its PR are pending. See the phase plan below.
 
 ## Getting started
 
@@ -55,17 +55,24 @@ rotate the JWT secret. Never commit real secrets.
 | `npm run build` | Build server and client |
 | `npm run typecheck` | Type-check both workspaces |
 | `npm run lint` | Lint both workspaces |
-| `npm test` | Run server tests |
+| `npm test` | Run server Vitest unit tests (55 tests) |
 | `npm run db:up` / `db:down` | Start/stop PostgreSQL |
 | `npm run db:migrate` | Apply Prisma migrations |
 | `npm run db:seed` | Seed demo data (admin, catalog, balances, opening stock movements) |
 | `npm run db:studio` | Open Prisma Studio |
 
+## Testing
+
+`npm test` runs the server Vitest suite in `server/tests/`. It covers pagination/text helpers and
+the catalog, inventory, and analytics Zod schemas without requiring a database or browser
+environment. Browser checks remain manual; no Playwright dependency is included.
+
 ## Architecture
 
 ```
-client/   React SPA (Vite, antd, Redux auth state, Axios API layer)
-server/   Express REST API (routes -> controllers -> services -> Prisma)
+client/       React SPA (Vite, antd, Redux auth state, Axios API layer)
+server/       Express REST API (routes -> controllers -> services -> Prisma)
+server/tests/ Vitest unit tests for utilities and Zod schemas
 ```
 
 Inventory balances live in the `Inventory` table, keyed by product and warehouse. Products never
@@ -125,5 +132,5 @@ at cost/selling price and movement flow, not realized revenue or profit.
 1. Foundation, database, authentication — complete
 2. Products, categories, suppliers, warehouses — complete
 3. Inventory operations and stock movement history — complete
-4. Dashboard, charts, reports — implemented, API-verified
-5. UI polish, tests, documentation — next
+4. Dashboard, charts, reports — complete
+5. UI polish, tests, documentation — implemented and verified
