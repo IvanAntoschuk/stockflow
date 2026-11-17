@@ -10,6 +10,8 @@ import { categoriesRouter } from './modules/catalog/categories.routes.js';
 import { productsRouter } from './modules/catalog/products.routes.js';
 import { suppliersRouter } from './modules/catalog/suppliers.routes.js';
 import { warehousesRouter } from './modules/catalog/warehouses.routes.js';
+import { inventoryRouter } from './modules/inventory/inventory.routes.js';
+import { movementsRouter } from './modules/inventory/movements.routes.js';
 import { sendSuccess } from './utils/response.js';
 
 export function createApp() {
@@ -57,6 +59,8 @@ export function createApp() {
   app.use('/api/suppliers', suppliersRouter);
   app.use('/api/warehouses', warehousesRouter);
   app.use('/api/products', productsRouter);
+  app.use('/api/inventory', inventoryRouter);
+  app.use('/api/movements', movementsRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);
