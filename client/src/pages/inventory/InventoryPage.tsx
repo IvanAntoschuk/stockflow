@@ -1,9 +1,4 @@
-import {
-  HistoryOutlined,
-  PlusOutlined,
-  SearchOutlined,
-  SwapOutlined,
-} from '@ant-design/icons';
+import { HistoryOutlined, PlusOutlined, SearchOutlined, SwapOutlined } from '@ant-design/icons';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   App,
@@ -350,7 +345,7 @@ export function InventoryPage() {
       <PageHeader
         title="Inventory"
         description="Review balances by warehouse, record receipts and issues, adjust counts and transfer stock."
-        breadcrumbs={[{ title: 'StockFlow' }, { title: 'Inventory' }]}
+        breadcrumbs={[{ title: 'StockFlow', href: '/dashboard' }, { title: 'Inventory' }]}
         actions={
           <>
             <Button icon={<SwapOutlined />} onClick={() => openTransfer()}>

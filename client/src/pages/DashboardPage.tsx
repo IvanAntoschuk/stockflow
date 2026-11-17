@@ -330,41 +330,47 @@ export function DashboardPage() {
             </span>
           }
         >
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={trendData} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
-              <defs>
-                <linearGradient id="receivedFill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={chartColors.emerald} stopOpacity={0.35} />
-                  <stop offset="95%" stopColor={chartColors.emerald} stopOpacity={0.02} />
-                </linearGradient>
-                <linearGradient id="issuedFill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={chartColors.red} stopOpacity={0.28} />
-                  <stop offset="95%" stopColor={chartColors.red} stopOpacity={0.02} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-              <XAxis dataKey="label" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-              <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-              <ChartTooltip />
-              <Legend />
-              <Area
-                type="monotone"
-                dataKey="received"
-                name="Received"
-                stroke={chartColors.emerald}
-                fill="url(#receivedFill)"
-                strokeWidth={2}
-              />
-              <Area
-                type="monotone"
-                dataKey="issued"
-                name="Issued"
-                stroke={chartColors.red}
-                fill="url(#issuedFill)"
-                strokeWidth={2}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
+          <div
+            className="h-full w-full"
+            role="img"
+            aria-label="Daily received and issued units during the selected period"
+          >
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={trendData} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="receivedFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor={chartColors.emerald} stopOpacity={0.35} />
+                    <stop offset="95%" stopColor={chartColors.emerald} stopOpacity={0.02} />
+                  </linearGradient>
+                  <linearGradient id="issuedFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor={chartColors.red} stopOpacity={0.28} />
+                    <stop offset="95%" stopColor={chartColors.red} stopOpacity={0.02} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                <XAxis dataKey="label" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+                <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+                <ChartTooltip />
+                <Legend />
+                <Area
+                  type="monotone"
+                  dataKey="received"
+                  name="Received"
+                  stroke={chartColors.emerald}
+                  fill="url(#receivedFill)"
+                  strokeWidth={2}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="issued"
+                  name="Issued"
+                  stroke={chartColors.red}
+                  fill="url(#issuedFill)"
+                  strokeWidth={2}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
         </ChartCard>
 
         <ChartCard
@@ -373,38 +379,44 @@ export function DashboardPage() {
           loading={loading}
           empty={categoryData.length === 0}
         >
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={categoryData}
-              layout="vertical"
-              margin={{ top: 4, right: 12, left: 8, bottom: 0 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
-              <XAxis
-                type="number"
-                tick={{ fontSize: 11 }}
-                tickFormatter={(value) => formatCurrency(Number(value))}
-                tickLine={false}
-                axisLine={false}
-              />
-              <YAxis
-                type="category"
-                dataKey="label"
-                width={92}
-                tick={{ fontSize: 11 }}
-                tickLine={false}
-                axisLine={false}
-              />
-              <ChartTooltip formatter={(value) => formatCurrency(Number(value))} />
-              <Bar
-                dataKey="value"
-                name="Value"
-                fill={chartColors.emerald}
-                radius={[0, 4, 4, 0]}
-                barSize={16}
-              />
-            </BarChart>
-          </ResponsiveContainer>
+          <div
+            className="h-full w-full"
+            role="img"
+            aria-label="On-hand inventory value grouped by category"
+          >
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={categoryData}
+                layout="vertical"
+                margin={{ top: 4, right: 12, left: 8, bottom: 0 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
+                <XAxis
+                  type="number"
+                  tick={{ fontSize: 11 }}
+                  tickFormatter={(value) => formatCurrency(Number(value))}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis
+                  type="category"
+                  dataKey="label"
+                  width={92}
+                  tick={{ fontSize: 11 }}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <ChartTooltip formatter={(value) => formatCurrency(Number(value))} />
+                <Bar
+                  dataKey="value"
+                  name="Value"
+                  fill={chartColors.emerald}
+                  radius={[0, 4, 4, 0]}
+                  barSize={16}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </ChartCard>
       </div>
 
@@ -415,26 +427,32 @@ export function DashboardPage() {
           loading={loading}
           empty={warehouseData.length === 0}
         >
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={warehouseData} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-              <XAxis dataKey="label" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-              <YAxis
-                tick={{ fontSize: 11 }}
-                tickFormatter={(value) => formatCurrency(Number(value))}
-                tickLine={false}
-                axisLine={false}
-              />
-              <ChartTooltip formatter={(value) => formatCurrency(Number(value))} />
-              <Bar
-                dataKey="value"
-                name="Value"
-                fill={chartColors.slate}
-                radius={[4, 4, 0, 0]}
-                barSize={36}
-              />
-            </BarChart>
-          </ResponsiveContainer>
+          <div
+            className="h-full w-full"
+            role="img"
+            aria-label="Inventory cost value distributed across warehouses"
+          >
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={warehouseData} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                <XAxis dataKey="label" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+                <YAxis
+                  tick={{ fontSize: 11 }}
+                  tickFormatter={(value) => formatCurrency(Number(value))}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <ChartTooltip formatter={(value) => formatCurrency(Number(value))} />
+                <Bar
+                  dataKey="value"
+                  name="Value"
+                  fill={chartColors.slate}
+                  radius={[4, 4, 0, 0]}
+                  barSize={36}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </ChartCard>
 
         <Card

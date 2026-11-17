@@ -24,15 +24,11 @@ export function SettingsPage() {
       <PageHeader
         title="Settings"
         description="Manage your StockFlow account and session."
-        breadcrumbs={[{ title: 'StockFlow' }, { title: 'Settings' }]}
+        breadcrumbs={[{ title: 'StockFlow', href: '/dashboard' }, { title: 'Settings' }]}
       />
 
       <div className="max-w-3xl space-y-6">
-        <Card
-          title="Profile"
-          style={{ borderRadius: 14 }}
-          styles={{ body: { padding: 24 } }}
-        >
+        <Card title="Profile" style={{ borderRadius: 14 }} styles={{ body: { padding: 24 } }}>
           <Descriptions
             column={1}
             colon={false}

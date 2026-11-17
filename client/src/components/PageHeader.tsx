@@ -1,5 +1,6 @@
 import { Breadcrumb, Typography } from 'antd';
 import type { ReactNode } from 'react';
+import { Link } from 'react-router-dom';
 
 export interface BreadcrumbItem {
   title: string;
@@ -20,7 +21,9 @@ export function PageHeader({ title, description, breadcrumbs, actions }: PageHea
         <Breadcrumb
           className="mb-3"
           style={{ fontSize: 12 }}
-          items={breadcrumbs.map((item) => ({ title: item.title }))}
+          items={breadcrumbs.map((item) => ({
+            title: item.href ? <Link to={item.href}>{item.title}</Link> : item.title,
+          }))}
         />
       ) : null}
       <div className="flex flex-wrap items-start justify-between gap-4">

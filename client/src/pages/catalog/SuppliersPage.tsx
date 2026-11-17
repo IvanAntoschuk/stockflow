@@ -18,12 +18,7 @@ import {
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { getApiErrorMessage } from '@/api/client';
-import {
-  createSupplier,
-  deleteSupplier,
-  listSuppliers,
-  updateSupplier,
-} from '@/api/suppliers';
+import { createSupplier, deleteSupplier, listSuppliers, updateSupplier } from '@/api/suppliers';
 import { FormField } from '@/components/FormField';
 import { PageHeader } from '@/components/PageHeader';
 import { supplierFormSchema, type SupplierFormValues } from '@/lib/validation/catalog';
@@ -178,18 +173,14 @@ export function SuppliersPage() {
       dataIndex: 'email',
       key: 'email',
       width: 220,
-      render: (email: string | null) => (
-        <span className="text-slate-600">{email || '—'}</span>
-      ),
+      render: (email: string | null) => <span className="text-slate-600">{email || '—'}</span>,
     },
     {
       title: 'Phone',
       dataIndex: 'phone',
       key: 'phone',
       width: 160,
-      render: (phone: string | null) => (
-        <span className="text-slate-600">{phone || '—'}</span>
-      ),
+      render: (phone: string | null) => <span className="text-slate-600">{phone || '—'}</span>,
     },
     {
       title: 'Products',
@@ -230,7 +221,7 @@ export function SuppliersPage() {
       <PageHeader
         title="Suppliers"
         description="Keep vendor contacts and product sourcing in one place."
-        breadcrumbs={[{ title: 'StockFlow' }, { title: 'Suppliers' }]}
+        breadcrumbs={[{ title: 'StockFlow', href: '/dashboard' }, { title: 'Suppliers' }]}
         actions={
           <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
             Add supplier

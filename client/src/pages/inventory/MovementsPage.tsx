@@ -162,9 +162,7 @@ export function MovementsPage() {
       dataIndex: 'createdAt',
       key: 'createdAt',
       width: 170,
-      render: (value: string) => (
-        <span className="text-slate-600">{formatDateTime(value)}</span>
-      ),
+      render: (value: string) => <span className="text-slate-600">{formatDateTime(value)}</span>,
     },
     {
       title: 'Type',
@@ -249,7 +247,7 @@ export function MovementsPage() {
       <PageHeader
         title="Movements"
         description="A permanent audit trail of every receipt, issue, adjustment and stock transfer."
-        breadcrumbs={[{ title: 'StockFlow' }, { title: 'Movements' }]}
+        breadcrumbs={[{ title: 'StockFlow', href: '/dashboard' }, { title: 'Movements' }]}
         actions={
           <Button type="primary" onClick={() => navigate('/inventory')}>
             Record movement
@@ -361,7 +359,11 @@ export function MovementsPage() {
               size="small"
               colon={false}
               items={[
-                { key: 'product', label: 'Product', children: `${detail.product.sku} — ${detail.product.name}` },
+                {
+                  key: 'product',
+                  label: 'Product',
+                  children: `${detail.product.sku} — ${detail.product.name}`,
+                },
                 { key: 'warehouse', label: 'Warehouse', children: detail.warehouse.name },
                 { key: 'change', label: 'Change', children: renderChange(detail) },
                 {

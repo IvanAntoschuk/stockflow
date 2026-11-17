@@ -3,7 +3,7 @@
 Operational instructions for future coding sessions. Read this file first, then `README.md`.
 If these notes conflict with a direct user instruction, the user wins.
 
-Last updated: 2026-11-17 (end of Phase 4 implementation; API verification passed, browser verification and PR pending).
+Last updated: 2026-11-17 (end of Phase 5 implementation; verification passed, browser verification and PR pending).
 
 ## 1. How to resume tomorrow
 
@@ -22,17 +22,13 @@ Last updated: 2026-11-17 (end of Phase 4 implementation; API verification passed
    ```
    The database container is `stockflow-db` (PostgreSQL 16) on `localhost:5434`.
    If it is not running: `npm run db:up`.
-4. Resume the active phase branch. Phase 4 work lives on `feature/phase-4-dashboard`:
+4. Resume the active phase branch. Phase 5 work lives on `feature/phase-5-polish`:
    ```powershell
-   git switch feature/phase-4-dashboard
-   git pull --ff-only
-   ```
-   After Phase 4 is approved and merged, start Phase 5 from an updated `main`:
-   ```powershell
-   git switch main
-   git pull --ff-only
    git switch feature/phase-5-polish
+   git pull --ff-only
    ```
+   After Phase 5 is approved and merged, start any follow-up work from an updated `main` on a new
+   branch agreed with the user.
 5. Check GitHub CLI auth before relying on PR commands:
    ```powershell
    gh auth status
@@ -52,14 +48,16 @@ Last updated: 2026-11-17 (end of Phase 4 implementation; API verification passed
 - Post-merge docs PR #2 was closed as superseded by PR #3; its docs updates are in `main`.
 - Phase 3 (inventory balances, stock movements, operations, and UI pages) is **complete, verified,
   and merged** in PR #3 as `5a9a252`; `feature/phase-3-inventory` was deleted locally and remotely.
-- Phase 4 (dashboard charts, reporting APIs and a real reports page) is **implemented** on
-  `feature/phase-4-dashboard`. Typecheck, lint, build, tests, and API smoke checks passed; browser
-  verification and the PR are pending.
-- `main` is at `5a9a252` (`Merge pull request #3 from IvanAntoschuk/feature/phase-3-inventory`).
+- Phase 4 (dashboard charts, reporting APIs and a real reports page) is **complete, verified, and
+  merged** in PR #4 as `87c905e`; `feature/phase-4-dashboard` was deleted locally and remotely.
+- Phase 5 (UI polish, automated tests, documentation) is **implemented** on
+  `feature/phase-5-polish`. Typecheck, lint, build, 55 unit tests, and API smoke checks passed;
+  browser verification and the PR are pending.
+- `main` is at `87c905e` (`Merge pull request #4 from IvanAntoschuk/feature/phase-4-dashboard`).
   Remote: `git@github.com:IvanAntoschuk/stockflow.git` (SSH).
-- Phase 4 work is uncommitted at this point in the handoff; expect backend, client, and docs commits.
+- Phase 5 work is uncommitted at this point in the handoff; expect client, test, and docs commits.
 - Database migrations: `20261116160905_init_auth`, `20261116172753_add_catalog`, and
-  `20261117141416_add_stock_movements` are applied locally. Phase 4 adds no migration.
+  `20261117141416_add_stock_movements` are applied locally. Phase 5 adds no migration.
 - Seed upserts one ADMIN user (`admin@stockflow.dev` / `Admin123!`, Olivia Bennett), five
   categories, five suppliers, two warehouses, twelve products, inventory rows across both
   warehouses with some intentionally low-stock items, and idempotent opening-balance movements.
@@ -67,7 +65,8 @@ Last updated: 2026-11-17 (end of Phase 4 implementation; API verification passed
 - Docker container is healthy; local PostgreSQL 17 already uses 5432, so the project uses 5434.
 - `gh` is authenticated as `IvanAntoschuk` via keyring, and SSH push works. Git identity:
   `Ivan Antoschuk <antoschukivan2010@gmail.com>`.
-- No automated test files exist yet (`vitest run --passWithNoTests`).
+- Server unit tests live in `server/tests/`; `npm test` runs 4 Vitest files (55 tests) covering
+  catalog utilities and catalog/inventory/analytics Zod schemas.
 
 ## 3. Stack and environment
 
@@ -93,7 +92,7 @@ npm run dev:client   # web only
 npm run build        # build both workspaces
 npm run typecheck    # both workspaces
 npm run lint         # both workspaces
-npm test             # server Vitest (currently no test files)
+npm test             # server Vitest (55 unit tests)
 npm run db:up        # docker compose up -d
 npm run db:down      # docker compose down
 npm run db:migrate   # prisma migrate dev
@@ -138,6 +137,7 @@ client/src/
   api/                 Axios instance and per-resource request functions
   app/                 Redux store and typed hooks
   components/          Shared UI, layout, guards, PageHeader, FormField
+  pages/RouteErrorPage.tsx  Branded route-level error fallback
   features/auth/       Auth slice and thunks
   lib/                 Labels and Zod validation schemas
   pages/               Route pages (all catalog, inventory and reporting modules)
@@ -161,6 +161,9 @@ server/prisma/
   schema.prisma        All Prisma models and enums
   migrations/          Applied migrations
   seed.ts              Idempotent admin, catalog and opening movements
+
+server/tests/
+  *.test.ts            Vitest unit tests for utilities and Zod schemas
 ```
 
 Backend pattern to follow:
@@ -184,6 +187,10 @@ Frontend pattern to follow:
 - Prefer `useWatch` over RHF `watch()`; `watch()` triggers a React Compiler lint warning.
 - Use `App.useApp()` for `message`/`modal`; avoid antd static methods.
 - Use `PageHeader` on every page. Use antd `Table`, `Drawer`/`Modal`, `Popconfirm`, `Descriptions`.
+- Give the root breadcrumb an `href: '/dashboard'`; `PageHeader` renders breadcrumb links via Router.
+- Protected pages should set `errorElement` to `RouteErrorPage` in `router.tsx`.
+- Avoid synchronous `setState` in effects: the React Compiler lint rule rejects it. Derive UI state
+  from location/request keys instead.
 - Alias `@/` maps to `client/src`.
 - Do not re-enable Tailwind preflight; it conflicts with antd.
 - Do not introduce another UI library, data-fetching library, or state library without approval.
@@ -218,11 +225,11 @@ Frontend pattern to follow:
 - Push the branch, open a PR to `main`, report the PR URL, and **wait for approval before merging**.
 - Preferred PR command after `gh auth login`:
   ```powershell
-  gh pr create --base main --head feature/phase-4-dashboard `
-    --title "Phase 4: Dashboard and reports" --body "<summary and verification>"
+  gh pr create --base main --head feature/phase-5-polish `
+    --title "Phase 5: UI polish, tests and documentation" --body "<summary and verification>"
   ```
 - Fallback compare URL:
-  `https://github.com/IvanAntoschuk/stockflow/compare/main...feature/phase-4-dashboard?expand=1`
+  `https://github.com/IvanAntoschuk/stockflow/compare/main...feature/phase-5-polish?expand=1`
 - Never force-push. Never rewrite `main`. Never merge without user approval.
 - After an approved merge: switch to `main`, pull, and delete the merged local/remote branch.
 - Before every commit: check `git diff --cached --name-only` for `.env`, `dist/`, `node_modules/`.
@@ -389,14 +396,14 @@ Keep `/inventory`, `/movements`, and `/reports` as placeholders until later phas
 
 Split further if a commit becomes hard to review. Push the branch and open the PR when done.
 
-## 9. Phase 3 — inventory operations and movements (implemented, API verified)
+## 9. Phase 3 — inventory operations and movements (complete, merged)
 
 Goal: expose per-warehouse balances, signed stock operations, transfers, a permanent movement audit
 trail, and real UI pages replacing the `/inventory` and `/movements` placeholders.
 
-Status: implemented on `feature/phase-3-inventory` with migration
+Status: complete and merged in PR #3 as `5a9a252` with migration
 `20261117141416_add_stock_movements`. Typecheck, lint, build, tests, and API smoke checks passed;
-browser verification and the PR are pending.
+`feature/phase-3-inventory` was deleted locally and remotely.
 
 Delivered layout: `server/src/modules/inventory/` (schemas, inventory service, movements service,
 controllers, routes), client requests in `client/src/api/inventory.ts` and
@@ -455,13 +462,14 @@ All endpoints require `authenticate`.
 2. `feat(client): add inventory and movement pages`
 3. `docs: update readme and handoff notes for phase 3`
 
-## 10. Phase 4 — dashboard and reports (implemented, API verified)
+## 10. Phase 4 — dashboard and reports (complete, merged)
 
 Goal: replace the static dashboard snapshot and reports placeholder with real aggregates, charts,
 and server-driven report tables.
 
-Status: implemented on `feature/phase-4-dashboard`. Typecheck, lint, build, tests, and API smoke
-checks passed; browser verification and the PR are pending. No migration is required.
+Status: complete and merged in PR #4 as `87c905e`. Typecheck, lint, build, tests, and API smoke
+checks passed; `feature/phase-4-dashboard` was deleted locally and remotely. No migration was
+required.
 
 Delivered layout: `server/src/modules/analytics/` (routes -> controller -> service -> schemas),
 client requests in `client/src/api/analytics.ts`, types in `client/src/types/analytics.ts`, a real
@@ -508,7 +516,44 @@ seed time, so movement history is not true pre-seed business history.
 2. `feat(client): add dashboard charts and reports page`
 3. `docs: update readme and handoff notes for phase 4`
 
-## 11. Verification protocol (every phase)
+## 11. Phase 5 — UI polish, tests and documentation (implemented)
+
+Goal: finish the first release pass with small UX improvements, automated regression coverage, and
+accurate handoff documentation.
+
+Status: implemented on `feature/phase-5-polish`. Typecheck, lint, build, 55 unit tests, and API
+smoke checks passed; browser verification and the PR are pending. No API or migration changes.
+
+### 11.1 UI polish
+
+- Header search uses antd `Input.Search`; its draft value is tied to the current Router location key
+  instead of being reset synchronously inside an effect.
+- Scroll position resets on pathname changes; unknown protected routes leave the sidebar selection
+  empty instead of highlighting Dashboard.
+- Root breadcrumbs link back to `/dashboard` via `PageHeader`; protected pages share
+  `RouteErrorPage` as `errorElement`.
+- Reports show loading spinners and KPI loading states, with a retryable error banner keyed to the
+  current request.
+- Recharts containers have `role="img"` and concise `aria-label`s; notifications are hidden below
+  the `sm` breakpoint so search keeps usable width on phones.
+
+### 11.2 Tests
+
+- Added `server/tests/catalog.utils.test.ts`, `catalog.schemas.test.ts`,
+  `inventory.schemas.test.ts`, and `analytics.schemas.test.ts`.
+- Tests use Vitest directly with no new dependencies, no config changes, and no production code
+  changes. They cover pagination metadata, text normalization, catalog defaults/validation,
+  movement/transfer rules, boolean query coercion, date ranges, and analytics query filters.
+- Tests live under `server/tests/` so they are discovered by Vitest and linted by ESLint but not
+  emitted into `server/dist`.
+
+### 11.3 Phase 5 commits
+
+1. `feat(client): polish navigation and route error states`
+2. `test(server): add schema and utility unit tests`
+3. `docs: update readme and handoff notes for phase 5`
+
+## 12. Verification protocol (every phase)
 
 Run and report:
 
@@ -518,6 +563,8 @@ npm run lint
 npm run build
 npm test
 ```
+
+`npm test` currently runs 55 unit tests in `server/tests/`.
 
 API checks:
 
@@ -545,6 +592,10 @@ Browser checks:
 - Refresh on a deep link works (SPA routing).
 - Mobile around 390px and desktop around 1440px; no horizontal overflow.
 - No console errors and no failed network requests.
+- Header search navigates to `/products?search=...`; root breadcrumb returns to `/dashboard`.
+- Unknown protected URLs show the branded 404 and route errors show `RouteErrorPage`.
+- Reports show spinners/KPI loading states and a retryable banner on request failure.
+- Notifications are hidden around 390px while search remains usable.
 - Clean up test data or re-run the idempotent seed afterwards.
 
 There is no Playwright dependency in the repo. Prior verification used an ad-hoc `playwright-core`
@@ -555,7 +606,7 @@ The user may prefer to run verification personally. Never run long-lived command
 (`prisma migrate deploy`, `vitest run`) with explicit timeouts. If a command needs input or exceeds
 the tool timeout, stop and report instead of retrying blindly.
 
-## 12. Known issues and gotchas
+## 13. Known issues and gotchas
 
 - **Root `package.json` is polluted.** It currently lists the entire dependency tree under
   `dependencies`, plus `main`, `keywords`, `author`, `license`, and `type: commonjs`. Those belong
@@ -577,7 +628,7 @@ the tool timeout, stop and report instead of retrying blindly.
 - Git may warn about LF/CRLF; `.gitattributes` normalizes text to LF.
 - Commit attribution depends on `antoschukivan2010@gmail.com` being verified on the GitHub account.
 
-## 13. Definition of done for a phase
+## 14. Definition of done for a phase
 
 - Feature works end to end against PostgreSQL.
 - Typecheck, lint, build, and available tests pass.

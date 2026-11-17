@@ -1,5 +1,6 @@
 import { SearchOutlined } from '@ant-design/icons';
 import {
+  Alert,
   App,
   Button,
   Card,
@@ -7,6 +8,7 @@ import {
   Empty,
   Input,
   Select,
+  Spin,
   Statistic,
   Table,
   Tag,
@@ -45,11 +47,7 @@ import { PageHeader } from '@/components/PageHeader';
 import { formatCurrency, formatDateTime } from '@/lib/format';
 import { getMovementLabel } from '@/lib/labels';
 import type { Category, Warehouse } from '@/types/catalog';
-import {
-  stockMovementTypes,
-  type StockMovement,
-  type StockMovementType,
-} from '@/types/inventory';
+import { stockMovementTypes, type StockMovement, type StockMovementType } from '@/types/inventory';
 import type {
   AnalyticsSummary,
   LowStockRow,
@@ -95,15 +93,23 @@ export function ReportsPage() {
   const [movements, setMovements] = useState<StockMovement[]>([]);
   const [totalMovements, setTotalMovements] = useState(0);
   const [loadedKey, setLoadedKey] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
+  const [errorState, setErrorState] = useState<{ key: string; message: string } | null>(null);
 
-  const requestKey = `${page}|${pageSize}|${search}|${warehouseId}|${categoryId}|${type}|${from}|${to}`;
+  const requestKey = `${reloadKey}|${page}|${pageSize}|${search}|${warehouseId}|${categoryId}|${type}|${from}|${to}`;
   const loading = loadedKey !== requestKey;
+  const error = errorState?.key === requestKey ? errorState.message : null;
 
   useEffect(() => {
     let active = true;
 
     Promise.all([
-      getAnalyticsSummary({ warehouseId: warehouseId || undefined, categoryId: categoryId || undefined, from, to }),
+      getAnalyticsSummary({
+        warehouseId: warehouseId || undefined,
+        categoryId: categoryId || undefined,
+        from,
+        to,
+      }),
       getMovementByType({
         warehouseId: warehouseId || undefined,
         categoryId: categoryId || undefined,
@@ -139,20 +145,31 @@ export function ReportsPage() {
         to,
       }),
     ])
-      .then(([summaryResult, byTypeResult, trendResult, stockResult, lowStockResult, movementResult]) => {
-        if (!active) return;
-        setSummary(summaryResult);
-        setByType(byTypeResult);
-        setTrend(trendResult);
-        setStockRows(stockResult.rows);
-        setLowStock(lowStockResult.items);
-        setMovements(movementResult.items);
-        setTotalMovements(movementResult.meta.total);
-        setLoadedKey(requestKey);
-      })
+      .then(
+        ([
+          summaryResult,
+          byTypeResult,
+          trendResult,
+          stockResult,
+          lowStockResult,
+          movementResult,
+        ]) => {
+          if (!active) return;
+          setSummary(summaryResult);
+          setByType(byTypeResult);
+          setTrend(trendResult);
+          setStockRows(stockResult.rows);
+          setLowStock(lowStockResult.items);
+          setMovements(movementResult.items);
+          setTotalMovements(movementResult.meta.total);
+          setLoadedKey(requestKey);
+        },
+      )
       .catch((error: unknown) => {
         if (active) {
-          message.error(getApiErrorMessage(error));
+          const apiError = getApiErrorMessage(error);
+          setErrorState({ key: requestKey, message: apiError });
+          message.error(apiError);
           setLoadedKey(requestKey);
         }
       });
@@ -362,9 +379,24 @@ export function ReportsPage() {
       <PageHeader
         title="Reports"
         description="Review inventory valuation, movement activity and stock alerts across the workspace."
-        breadcrumbs={[{ title: 'StockFlow' }, { title: 'Reports' }]}
+        breadcrumbs={[{ title: 'StockFlow', href: '/dashboard' }, { title: 'Reports' }]}
         actions={<Button onClick={resetFilters}>Reset filters</Button>}
       />
+
+      {error ? (
+        <Alert
+          className="mb-4"
+          type="error"
+          showIcon
+          message="Could not load report data"
+          description={error}
+          action={
+            <Button size="small" onClick={() => setReloadKey((value) => value + 1)}>
+              Retry
+            </Button>
+          }
+        />
+      ) : null}
 
       <Card style={{ borderRadius: 14 }} styles={{ body: { padding: 20 } }}>
         <div className="flex flex-wrap items-center gap-3">
@@ -430,13 +462,14 @@ export function ReportsPage() {
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Card style={{ borderRadius: 14 }} styles={{ body: { padding: 18 } }}>
-          <Statistic title="Movements" value={summary?.movements.total ?? 0} />
+          <Statistic title="Movements" value={summary?.movements.total ?? 0} loading={loading} />
         </Card>
         <Card style={{ borderRadius: 14 }} styles={{ body: { padding: 18 } }}>
           <Statistic
             title="Units received"
             value={summary?.movements.receivedUnits ?? 0}
             valueStyle={{ color: '#059669' }}
+            loading={loading}
           />
         </Card>
         <Card style={{ borderRadius: 14 }} styles={{ body: { padding: 18 } }}>
@@ -444,6 +477,7 @@ export function ReportsPage() {
             title="Units issued"
             value={summary?.movements.issuedUnits ?? 0}
             valueStyle={{ color: '#dc2626' }}
+            loading={loading}
           />
         </Card>
         <Card style={{ borderRadius: 14 }} styles={{ body: { padding: 18 } }}>
@@ -452,6 +486,7 @@ export function ReportsPage() {
             value={summary ? Number(summary.stock.inventoryValueAtCost) : 0}
             precision={2}
             prefix="$"
+            loading={loading}
           />
         </Card>
       </div>
@@ -467,40 +502,54 @@ export function ReportsPage() {
           <div className="h-[280px] min-w-0">
             {loading ? (
               <div className="flex h-full items-center justify-center">
-                <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Loading report" />
+                <Spin size="large" />
               </div>
             ) : trendData.length === 0 ? (
               <div className="flex h-full items-center justify-center">
-                <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No movements in this period" />
+                <Empty
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                  description="No movements in this period"
+                />
               </div>
             ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={trendData} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                  <XAxis dataKey="label" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-                  <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-                  <ChartTooltip />
-                  <Legend />
-                  <Area
-                    type="monotone"
-                    dataKey="received"
-                    name="Received"
-                    stroke={typeColors.RECEIPT}
-                    fill={typeColors.RECEIPT}
-                    fillOpacity={0.15}
-                    strokeWidth={2}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="issued"
-                    name="Issued"
-                    stroke={typeColors.ISSUE}
-                    fill={typeColors.ISSUE}
-                    fillOpacity={0.12}
-                    strokeWidth={2}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
+              <div
+                className="h-full w-full"
+                role="img"
+                aria-label="Daily received and issued units during the selected period"
+              >
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={trendData} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                    <XAxis
+                      dataKey="label"
+                      tick={{ fontSize: 11 }}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+                    <ChartTooltip />
+                    <Legend />
+                    <Area
+                      type="monotone"
+                      dataKey="received"
+                      name="Received"
+                      stroke={typeColors.RECEIPT}
+                      fill={typeColors.RECEIPT}
+                      fillOpacity={0.15}
+                      strokeWidth={2}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="issued"
+                      name="Issued"
+                      stroke={typeColors.ISSUE}
+                      fill={typeColors.ISSUE}
+                      fillOpacity={0.12}
+                      strokeWidth={2}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
             )}
           </div>
         </Card>
@@ -513,24 +562,42 @@ export function ReportsPage() {
             Count of recorded movements per operation
           </Typography.Text>
           <div className="h-[280px] min-w-0">
-            {loading || typeData.every((row) => row.count === 0) ? (
+            {loading ? (
               <div className="flex h-full items-center justify-center">
-                <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No movements in this period" />
+                <Spin size="large" />
+              </div>
+            ) : typeData.every((row) => row.count === 0) ? (
+              <div className="flex h-full items-center justify-center">
+                <Empty
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                  description="No movements in this period"
+                />
               </div>
             ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={typeData} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                  <XAxis dataKey="label" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
-                  <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-                  <ChartTooltip />
-                  <Bar dataKey="count" name="Movements" radius={[4, 4, 0, 0]}>
-                    {typeData.map((row) => (
-                      <Cell key={row.type} fill={typeColors[row.type]} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+              <div
+                className="h-full w-full"
+                role="img"
+                aria-label="Count of stock movements grouped by operation type"
+              >
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={typeData} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                    <XAxis
+                      dataKey="label"
+                      tick={{ fontSize: 10 }}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+                    <ChartTooltip />
+                    <Bar dataKey="count" name="Movements" radius={[4, 4, 0, 0]}>
+                      {typeData.map((row) => (
+                        <Cell key={row.type} fill={typeColors[row.type]} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             )}
           </div>
         </Card>
