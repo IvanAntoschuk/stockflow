@@ -10,9 +10,9 @@ multiple warehouses, records every stock movement, and surfaces low-stock and va
 - **Backend:** Node.js, Express 5, TypeScript, Prisma, PostgreSQL, JWT, Zod
 - **Infrastructure:** Docker Compose (PostgreSQL)
 
-Project status: Phase 1 (foundation and authentication) and Phase 2 (catalog management) are
-complete. Phase 3 (inventory operations and stock movement history) is implemented and API-verified;
-browser verification and its PR are pending. See the phase plan below.
+Project status: Phases 1–3 (authentication, catalog management, and inventory operations) are
+complete. Phase 4 (dashboard charts, reporting APIs, and reports page) is implemented and
+API-verified; browser verification and its PR are pending. See the phase plan below.
 
 ## Getting started
 
@@ -103,10 +103,27 @@ include an `out`/`low`/`ok` status. Movement queries accept `search`, `productId
 write paired `TRANSFER_OUT`/`TRANSFER_IN` rows with a shared reference. Over-issue returns `409`,
 while zero adjustments and same-warehouse transfers return `422`.
 
+### Analytics API
+
+All analytics endpoints require a bearer token and are read-only.
+
+| Resource | Endpoints |
+| --- | --- |
+| Summary | `GET /api/analytics/summary` |
+| Stock breakdown | `GET /api/analytics/stock-breakdown` |
+| Stock alerts | `GET /api/analytics/low-stock` |
+| Movement trend | `GET /api/analytics/movements/trend` |
+| Movement types | `GET /api/analytics/movements/by-type` |
+
+Filters include `productId`, `warehouseId`, `categoryId`, `supplierId`, `from`, and `to`; movement
+endpoints also accept `type`. Stock breakdown can group by `category`, `supplier`, or `warehouse`.
+Money is returned as decimal strings. There is no sales/order model, so reports show on-hand value
+at cost/selling price and movement flow, not realized revenue or profit.
+
 ## Phase plan
 
 1. Foundation, database, authentication — complete
 2. Products, categories, suppliers, warehouses — complete
-3. Inventory operations and stock movement history — implemented, API-verified
-4. Dashboard, charts, reports — next
-5. UI polish, tests, documentation
+3. Inventory operations and stock movement history — complete
+4. Dashboard, charts, reports — implemented, API-verified
+5. UI polish, tests, documentation — next
