@@ -3,7 +3,7 @@
 Operational instructions for future coding sessions. Read this file first, then `README.md`.
 If these notes conflict with a direct user instruction, the user wins.
 
-Last updated: 2026-11-17 (end of Phase 3 implementation; API verification passed, browser verification and PR pending).
+Last updated: 2026-11-17 (end of Phase 4 implementation; API verification passed, browser verification and PR pending).
 
 ## 1. How to resume tomorrow
 
@@ -22,16 +22,16 @@ Last updated: 2026-11-17 (end of Phase 3 implementation; API verification passed
    ```
    The database container is `stockflow-db` (PostgreSQL 16) on `localhost:5434`.
    If it is not running: `npm run db:up`.
-4. Resume the active phase branch. Phase 3 work lives on `feature/phase-3-inventory`:
+4. Resume the active phase branch. Phase 4 work lives on `feature/phase-4-dashboard`:
    ```powershell
-   git switch feature/phase-3-inventory
+   git switch feature/phase-4-dashboard
    git pull --ff-only
    ```
-   After Phase 3 is approved and merged, start Phase 4 from an updated `main`:
+   After Phase 4 is approved and merged, start Phase 5 from an updated `main`:
    ```powershell
    git switch main
    git pull --ff-only
-   git switch feature/phase-4-dashboard
+   git switch feature/phase-5-polish
    ```
 5. Check GitHub CLI auth before relying on PR commands:
    ```powershell
@@ -49,20 +49,17 @@ Last updated: 2026-11-17 (end of Phase 3 implementation; API verification passed
 - Phase 1 (foundation + authentication) is **complete, verified, and pushed**.
 - Phase 2 (catalog schema, seed, CRUD APIs, and UI pages) is **complete, verified, and merged** in
   PR #1 as `d8b4291`; `feature/phase-2-catalog` was deleted locally and remotely.
-- Post-merge docs PR #2 (`docs/phase-2-complete`, `ca373bb`) is still open and unmerged. Phase 3
-  was branched from `d8b4291`, so it does not include that commit; this branch updates the same docs.
-- Phase 3 (inventory balances, stock movements, operations, and UI pages) is **implemented** on
-  `feature/phase-3-inventory`. Typecheck, lint, build, tests, and API smoke checks passed; browser
+- Post-merge docs PR #2 was closed as superseded by PR #3; its docs updates are in `main`.
+- Phase 3 (inventory balances, stock movements, operations, and UI pages) is **complete, verified,
+  and merged** in PR #3 as `5a9a252`; `feature/phase-3-inventory` was deleted locally and remotely.
+- Phase 4 (dashboard charts, reporting APIs and a real reports page) is **implemented** on
+  `feature/phase-4-dashboard`. Typecheck, lint, build, tests, and API smoke checks passed; browser
   verification and the PR are pending.
-- `main` is at `d8b4291` (`Merge pull request #1 from IvanAntoschuk/feature/phase-2-catalog`).
+- `main` is at `5a9a252` (`Merge pull request #3 from IvanAntoschuk/feature/phase-3-inventory`).
   Remote: `git@github.com:IvanAntoschuk/stockflow.git` (SSH).
-- Phase 3 commits on the active branch:
-  - `76f06f5` `feat(server): add stock movements and inventory operations api`
-  - `705aa93` `feat(client): add inventory and movement pages`
-  - docs commit pending in this session
+- Phase 4 work is uncommitted at this point in the handoff; expect backend, client, and docs commits.
 - Database migrations: `20261116160905_init_auth`, `20261116172753_add_catalog`, and
-  `20261117141416_add_stock_movements` are applied locally. The Phase 3 migration is part of this
-  branch; run `npm run db:migrate` after pulling it.
+  `20261117141416_add_stock_movements` are applied locally. Phase 4 adds no migration.
 - Seed upserts one ADMIN user (`admin@stockflow.dev` / `Admin123!`, Olivia Bennett), five
   categories, five suppliers, two warehouses, twelve products, inventory rows across both
   warehouses with some intentionally low-stock items, and idempotent opening-balance movements.
@@ -143,7 +140,7 @@ client/src/
   components/          Shared UI, layout, guards, PageHeader, FormField
   features/auth/       Auth slice and thunks
   lib/                 Labels and Zod validation schemas
-  pages/               Route pages (catalog and inventory modules; reports still placeholder)
+  pages/               Route pages (all catalog, inventory and reporting modules)
   router.tsx           All routes
   theme.ts             Ant Design tokens
   index.css            Tailwind v4 layers; preflight intentionally omitted
@@ -154,6 +151,7 @@ server/src/
   lib/prisma.ts        Prisma singleton
   middleware/          Central error handler and 404
   modules/auth/        routes -> controller -> service, Zod schemas, JWT middleware
+  modules/analytics/   Dashboard and reporting aggregates with Zod-validated filters
   modules/catalog/     Category, supplier, warehouse and product CRUD
   modules/inventory/   Inventory list, stock movement operations and history
   types/express.d.ts   `req.user` declaration merging
@@ -220,11 +218,11 @@ Frontend pattern to follow:
 - Push the branch, open a PR to `main`, report the PR URL, and **wait for approval before merging**.
 - Preferred PR command after `gh auth login`:
   ```powershell
-  gh pr create --base main --head feature/phase-3-inventory `
-    --title "Phase 3: Inventory operations and movements" --body "<summary and verification>"
+  gh pr create --base main --head feature/phase-4-dashboard `
+    --title "Phase 4: Dashboard and reports" --body "<summary and verification>"
   ```
 - Fallback compare URL:
-  `https://github.com/IvanAntoschuk/stockflow/compare/main...feature/phase-3-inventory?expand=1`
+  `https://github.com/IvanAntoschuk/stockflow/compare/main...feature/phase-4-dashboard?expand=1`
 - Never force-push. Never rewrite `main`. Never merge without user approval.
 - After an approved merge: switch to `main`, pull, and delete the merged local/remote branch.
 - Before every commit: check `git diff --cached --name-only` for `.env`, `dist/`, `node_modules/`.
@@ -457,7 +455,60 @@ All endpoints require `authenticate`.
 2. `feat(client): add inventory and movement pages`
 3. `docs: update readme and handoff notes for phase 3`
 
-## 10. Verification protocol (every phase)
+## 10. Phase 4 — dashboard and reports (implemented, API verified)
+
+Goal: replace the static dashboard snapshot and reports placeholder with real aggregates, charts,
+and server-driven report tables.
+
+Status: implemented on `feature/phase-4-dashboard`. Typecheck, lint, build, tests, and API smoke
+checks passed; browser verification and the PR are pending. No migration is required.
+
+Delivered layout: `server/src/modules/analytics/` (routes -> controller -> service -> schemas),
+client requests in `client/src/api/analytics.ts`, types in `client/src/types/analytics.ts`, a real
+dashboard in `client/src/pages/DashboardPage.tsx`, and a reports page in
+`client/src/pages/reports/ReportsPage.tsx`. Recharts is now used for the dashboard and report charts.
+
+### 10.1 API
+
+All analytics endpoints require `authenticate`, are read-only, and return the shared envelope.
+
+| Endpoint | Purpose |
+| --- | --- |
+| `GET /api/analytics/summary` | Catalog counts, on-hand units, low/out alerts, cost/selling valuation, potential margin, and movement counts |
+| `GET /api/analytics/stock-breakdown` | Valuation/units grouped by `category`, `supplier`, or `warehouse` |
+| `GET /api/analytics/low-stock` | Paginated `out`/`low` balances with shortfall and cost value |
+| `GET /api/analytics/movements/trend` | Daily/weekly/monthly movement counts and received/issued/net units |
+| `GET /api/analytics/movements/by-type` | All five movement types with count and absolute units |
+
+Shared filters: `productId`, `warehouseId`, `categoryId`, `supplierId`, `from`, `to`. Movement
+endpoints also accept `type`; stock breakdown accepts `groupBy` and `includeArchived`; low stock
+accepts `page`, `pageSize`, `search`, `status`, and `includeArchived`. Date ranges are validated with
+`from <= to` and return `422 VALIDATION_ERROR` when reversed.
+
+### 10.2 Client pages
+
+- Dashboard: KPI cards, date-range picker, movement activity area chart, stock value by category,
+  warehouse distribution, low-stock table, and links to reports/settings.
+- Reports: URL-synced date/warehouse/category/type/search filters, summary statistics, movement
+  trend and by-type charts, server-paginated movement history, warehouse valuation table, and
+  low-stock report.
+- Money values are serialized as decimal strings by the API and formatted with `formatCurrency()`;
+  charts use the theme's emerald/red/amber/slate palette.
+
+### 10.3 Reporting caveat
+
+There is no sales/order model, so reports must not claim realized revenue or profit. The defensible
+metrics are on-hand quantity, inventory value at cost, potential value at selling price, potential
+margin, stock alerts, and signed movement flow. Seed opening balances are `RECEIPT` rows created at
+seed time, so movement history is not true pre-seed business history.
+
+### 10.4 Phase 4 commits
+
+1. `feat(server): add analytics summary and reporting endpoints`
+2. `feat(client): add dashboard charts and reports page`
+3. `docs: update readme and handoff notes for phase 4`
+
+## 11. Verification protocol (every phase)
 
 Run and report:
 
@@ -483,6 +534,10 @@ API checks:
 - A product with movement history archives on delete, even after balances reach zero.
 - Movements for archived products return `409 PRODUCT_ARCHIVED`.
 - Warehouses with inventory or movement rows cannot be deleted (`409`).
+- Analytics summary units equal the sum of active inventory balances.
+- Stock breakdown groups sum to the same total units for every `groupBy` value.
+- Low-stock report rows are only `out`/`low` and respect pagination.
+- Movement trend/by-type reflect filtered movements; reversed date ranges return `422`.
 
 Browser checks:
 
@@ -500,7 +555,7 @@ The user may prefer to run verification personally. Never run long-lived command
 (`prisma migrate deploy`, `vitest run`) with explicit timeouts. If a command needs input or exceeds
 the tool timeout, stop and report instead of retrying blindly.
 
-## 11. Known issues and gotchas
+## 12. Known issues and gotchas
 
 - **Root `package.json` is polluted.** It currently lists the entire dependency tree under
   `dependencies`, plus `main`, `keywords`, `author`, `license`, and `type: commonjs`. Those belong
@@ -522,7 +577,7 @@ the tool timeout, stop and report instead of retrying blindly.
 - Git may warn about LF/CRLF; `.gitattributes` normalizes text to LF.
 - Commit attribution depends on `antoschukivan2010@gmail.com` being verified on the GitHub account.
 
-## 12. Definition of done for a phase
+## 13. Definition of done for a phase
 
 - Feature works end to end against PostgreSQL.
 - Typecheck, lint, build, and available tests pass.

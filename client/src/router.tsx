@@ -3,7 +3,6 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { ProtectedRoute, PublicOnlyRoute } from '@/components/RouteGuards';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
-import { PlaceholderPage } from '@/pages/PlaceholderPage';
 import { SettingsPage } from '@/pages/SettingsPage';
 import { LoginPage } from '@/pages/auth/LoginPage';
 import { RegisterPage } from '@/pages/auth/RegisterPage';
@@ -13,6 +12,7 @@ import { SuppliersPage } from '@/pages/catalog/SuppliersPage';
 import { WarehousesPage } from '@/pages/catalog/WarehousesPage';
 import { InventoryPage } from '@/pages/inventory/InventoryPage';
 import { MovementsPage } from '@/pages/inventory/MovementsPage';
+import { ReportsPage } from '@/pages/reports/ReportsPage';
 
 export const router = createBrowserRouter([
   {
@@ -47,15 +47,7 @@ export const router = createBrowserRouter([
       { path: 'warehouses', element: <WarehousesPage /> },
       { path: 'suppliers', element: <SuppliersPage /> },
       { path: 'movements', element: <MovementsPage /> },
-      {
-        path: 'reports',
-        element: (
-          <PlaceholderPage
-            title="Reports"
-            description="Review inventory valuation, stock alerts and movement history."
-          />
-        ),
-      },
+      { path: 'reports', element: <ReportsPage /> },
       { path: 'settings', element: <SettingsPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
