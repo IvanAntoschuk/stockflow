@@ -39,8 +39,8 @@ const steps: SetupStep[] = [
   {
     title: 'Record stock movements',
     description: 'Receive, issue, adjust and transfer stock with a complete audit trail.',
-    state: 'next',
-    action: { label: 'Open inventory', path: '/inventory' },
+    state: 'complete',
+    action: { label: 'View movements', path: '/movements' },
   },
 ];
 
@@ -83,8 +83,8 @@ export function DashboardPage() {
           styles={{ body: { padding: 24 } }}
         >
           <p className="mb-5 text-sm leading-6 text-slate-600">
-            Your authentication and catalog layers are live. Record stock movements next to unlock
-            warehouse balances, low-stock alerts and inventory analytics.
+            Your authentication, catalog and inventory layers are live. Reporting and analytics are
+            the final piece.
           </p>
 
           <div className="space-y-3">
@@ -172,20 +172,20 @@ export function DashboardPage() {
           >
             <p className="text-[13px] leading-6 text-slate-500">
               Live product counts, low-stock alerts, inventory valuation and movement trends will
-              appear here once inventory operations are recorded.
+              appear here when the reporting dashboard is added.
             </p>
             <ul className="mt-4 space-y-2.5 text-[13px] text-slate-600">
               <li className="flex items-center justify-between gap-3">
                 <span>Inventory value</span>
-                <Tag className="!mr-0">Awaiting stock</Tag>
+                <Tag className="!mr-0">Phase 4</Tag>
               </li>
               <li className="flex items-center justify-between gap-3">
                 <span>Low-stock alerts</span>
-                <Tag className="!mr-0">Awaiting movements</Tag>
+                <Tag className="!mr-0">Phase 4</Tag>
               </li>
               <li className="flex items-center justify-between gap-3">
                 <span>Movement activity</span>
-                <Tag className="!mr-0">No movements</Tag>
+                <Tag className="!mr-0">Phase 4</Tag>
               </li>
             </ul>
           </Card>
