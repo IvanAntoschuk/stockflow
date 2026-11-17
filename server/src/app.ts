@@ -5,6 +5,7 @@ import helmet from 'helmet';
 import { env } from './config/env.js';
 import { prisma } from './lib/prisma.js';
 import { errorHandler, notFoundHandler } from './middleware/error-handler.js';
+import { analyticsRouter } from './modules/analytics/analytics.routes.js';
 import { authRouter } from './modules/auth/auth.routes.js';
 import { categoriesRouter } from './modules/catalog/categories.routes.js';
 import { productsRouter } from './modules/catalog/products.routes.js';
@@ -61,6 +62,7 @@ export function createApp() {
   app.use('/api/products', productsRouter);
   app.use('/api/inventory', inventoryRouter);
   app.use('/api/movements', movementsRouter);
+  app.use('/api/analytics', analyticsRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);
