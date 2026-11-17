@@ -11,7 +11,7 @@ multiple warehouses, records every stock movement, and surfaces low-stock and va
 - **Infrastructure:** Docker Compose (PostgreSQL)
 
 Project status: Phase 1 (foundation and authentication) and Phase 2 (catalog management) are
-implemented. Phase 2 is awaiting verification and merge. See the phase plan below.
+complete, verified, and merged. See the phase plan below.
 
 ## Getting started
 
@@ -89,7 +89,7 @@ Deleting a product that still has stock archives it instead of removing it.
 ## Phase plan
 
 1. Foundation, database, authentication — complete
-2. Products, categories, suppliers, warehouses — implemented, awaiting verification
+2. Products, categories, suppliers, warehouses — complete, verified, and merged
 3. Inventory operations and stock movement history — next
 4. Dashboard, charts, reports
 5. UI polish, tests, documentation

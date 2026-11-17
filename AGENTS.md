@@ -3,7 +3,7 @@
 Operational instructions for future coding sessions. Read this file first, then `README.md`.
 If these notes conflict with a direct user instruction, the user wins.
 
-Last updated: 2026-11-16 (end of Phase 2 implementation; verification and merge pending).
+Last updated: 2026-11-17 (Phase 2 verified and merged; Phase 3 not started).
 
 ## 1. How to resume tomorrow
 
@@ -22,23 +22,20 @@ Last updated: 2026-11-16 (end of Phase 2 implementation; verification and merge 
    ```
    The database container is `stockflow-db` (PostgreSQL 16) on `localhost:5434`.
    If it is not running: `npm run db:up`.
-4. Resume the active phase branch. Phase 2 work lives on `feature/phase-2-catalog`:
-   ```powershell
-   git switch feature/phase-2-catalog
-   git pull --ff-only
-   ```
-   After Phase 2 is approved and merged, start Phase 3 from an updated `main`:
+4. Start the active phase branch. Phase 2 is merged into `main` and its branch was deleted.
+   Phase 3 work lives on `feature/phase-3-inventory`:
    ```powershell
    git switch main
    git pull --ff-only
    git switch feature/phase-3-inventory
+   git pull --ff-only
    ```
 5. Check GitHub CLI auth before relying on PR commands:
    ```powershell
    gh auth status
    ```
-   Last check: token for `vanya12312e` was invalid. SSH push works as `IvanAntoschuk`.
-   If `gh` is still unauthenticated, ask the user to run `gh auth login -h github.com`.
+   Last check: authenticated as `IvanAntoschuk` via keyring; the old `vanya12312e` token is invalid.
+   If `gh auth status` shows no active account, ask the user to run `gh auth login -h github.com`.
 6. Briefly report the plan, implement, commit, push, and open a PR. The user often runs verification
    personally; do not block on long checks unless asked. **Pause for approval** before merging.
    The user wants one phase at a time.
@@ -46,24 +43,22 @@ Last updated: 2026-11-16 (end of Phase 2 implementation; verification and merge 
 ## 2. Status snapshot
 
 - Phase 1 (foundation + authentication) is **complete, verified, and pushed**.
-- Phase 2 (catalog schema, seed, CRUD APIs, and UI pages) is **implemented** on
-  `feature/phase-2-catalog`. User verification and the PR merge are pending.
-- `main` is at `d2f0d07` (`docs: add agent handoff notes`).
+- Phase 2 (catalog schema, seed, CRUD APIs, and UI pages) is **complete, verified, and merged** via
+  PR #1; `feature/phase-2-catalog` was deleted locally and remotely.
+- `main` is at `d8b4291` (`Merge pull request #1 from IvanAntoschuk/feature/phase-2-catalog`).
 - Remote: `git@github.com:IvanAntoschuk/stockflow.git` (SSH).
-- `main` and the four phase branches started from `d2f0d07`. `feature/phase-2-catalog` carries the
-  Phase 2 commits:
-  - `feature/phase-2-catalog` (active)
-  - `feature/phase-3-inventory`
+- `main` and the four phase branches started from `d2f0d07`. Remaining phase branches:
+  - `feature/phase-3-inventory` (next)
   - `feature/phase-4-dashboard`
   - `feature/phase-5-polish`
-- Database migrations: `20261116160905_init_auth` is applied; `20261116172753_add_catalog` is part
-  of the Phase 2 branch. Run `npm run db:migrate` after pulling Phase 2.
+- Database migrations: `20261116160905_init_auth` and `20261116172753_add_catalog` are both applied.
 - Seed upserts one ADMIN user (`admin@stockflow.dev` / `Admin123!`, Olivia Bennett), five
   categories, five suppliers, two warehouses, twelve products, and inventory rows across both
   warehouses with some intentionally low-stock items.
 - `.env` exists locally and is ignored; never commit it.
 - Docker container is healthy; local PostgreSQL 17 already uses 5432, so the project uses 5434.
-- `gh` token is invalid; SSH push works. Git identity: `Ivan Antoschuk <antoschukivan2010@gmail.com>`.
+- `gh` is authenticated via keyring as `IvanAntoschuk`; SSH push works. Git identity:
+  `Ivan Antoschuk <antoschukivan2010@gmail.com>`.
 - No automated test files exist yet (`vitest run --passWithNoTests`).
 
 ## 3. Stack and environment
@@ -199,7 +194,6 @@ Frontend pattern to follow:
 
 - `main` is the stable branch. Never develop directly on `main`.
 - One long-lived feature branch per phase, created from `main`:
-  - `feature/phase-2-catalog`
   - `feature/phase-3-inventory`
   - `feature/phase-4-dashboard`
   - `feature/phase-5-polish`
@@ -211,22 +205,22 @@ Frontend pattern to follow:
 - Push the branch, open a PR to `main`, report the PR URL, and **wait for approval before merging**.
 - Preferred PR command after `gh auth login`:
   ```powershell
-  gh pr create --base main --head feature/phase-2-catalog `
-    --title "Phase 2: Catalog management" --body "<summary and verification>"
+  gh pr create --base main --head feature/phase-3-inventory `
+    --title "Phase 3: Inventory operations" --body "<summary and verification>"
   ```
 - Fallback compare URL:
-  `https://github.com/IvanAntoschuk/stockflow/compare/main...feature/phase-2-catalog?expand=1`
+  `https://github.com/IvanAntoschuk/stockflow/compare/main...feature/phase-3-inventory?expand=1`
 - Never force-push. Never rewrite `main`. Never merge without user approval.
 - After an approved merge: switch to `main`, pull, and delete the merged local/remote branch.
 - Before every commit: check `git diff --cached --name-only` for `.env`, `dist/`, `node_modules/`.
 - Phase cadence: implement, verify, report, pause. Do not start the next phase automatically.
 
-## 8. Phase 2 — catalog management (implemented, verification pending)
+## 8. Phase 2 — catalog management (implemented, verified and merged)
 
 Goal: Product / Category / Supplier / Warehouse schema, CRUD APIs, seed data, and real UI pages
 replacing the corresponding `PlaceholderPage` routes.
 
-Status: implemented on `feature/phase-2-catalog` with migration `20261116172753_add_catalog`.
+Status: merged into `main` via PR #1 with migration `20261116172753_add_catalog`.
 The subsections below document the delivered behavior and serve as a review reference.
 
 Delivered layout: `server/src/modules/catalog/` (routes -> controller -> service -> schemas for all
@@ -380,7 +374,7 @@ Keep `/inventory`, `/movements`, and `/reports` as placeholders until later phas
 2. `feat(client): add catalog management pages`
 3. `docs: update readme and handoff notes for phase 2`
 
-Split further if a commit becomes hard to review. Push the branch and open the PR when done.
+Split further if a commit becomes hard to review. Merged via PR #1 on 2026-11-17.
 
 ## 9. Verification protocol (every phase)
 
